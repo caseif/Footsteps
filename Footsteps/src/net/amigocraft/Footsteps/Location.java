@@ -2,25 +2,25 @@ package net.amigocraft.Footsteps;
 
 public class Location {
 	
-	private int x;
-	private int y;
-	private int z;
+	private float x;
+	private float y;
+	private float z;
 	
-	public Location(int x, int y, int z){
+	public Location(float x, float y, float z){
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public int getX(){
+	public float getX(){
 		return this.x;
 	}
 	
-	public int getY(){
+	public float getY(){
 		return this.y;
 	}
 
-	public int getZ(){
+	public float getZ(){
 		return this.z;
 	}
 	
@@ -29,7 +29,7 @@ public class Location {
 	}
 	
 	public int hashCode(){
-		return 41 * (x + y + z + 41);
+		return 41 * (int)(x + y + z + 41);
 	}
 	
 	public boolean xZEquals(Location l){

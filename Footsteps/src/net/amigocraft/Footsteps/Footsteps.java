@@ -44,6 +44,7 @@ public class Footsteps implements ImageObserver {
 
 	public boolean jumping = false;
 	public boolean falling = true;
+	public boolean smoothing = false;
 
 	public int playerHeight = 10;
 	public float gravity = 0.5f;
@@ -87,8 +88,8 @@ public class Footsteps implements ImageObserver {
 		GL11.glEnable(GL11.GL_LIGHT0);
 		GL11.glLightModel(GL11.GL_LIGHT_MODEL_AMBIENT, asFloatBuffer(new float[]{0.05f, 0.05f, 0.05f, 1f}));
 		GL11.glLight(GL11.GL_LIGHT0, GL11.GL_DIFFUSE, asFloatBuffer(new float[]{1.5f, 1.5f, 1.5f, 1f}));
-		//GL11.glEnable(GL11.GL_CULL_FACE);
-		//GL11.glCullFace(GL11.GL_BACK);
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glCullFace(GL11.GL_FRONT);
 		GL11.glEnable(GL11.GL_COLOR_MATERIAL);
 		GL11.glColorMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE);
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
@@ -217,7 +218,7 @@ public class Footsteps implements ImageObserver {
 						if (textured)
 							GL11.glTexCoord2f(0, 1);
 						GL11.glVertex3f(x, y4, z + 1f);
-						terrainCap.add(new Location((int)x, (int)y1, (int)z));
+						terrainCap.add(new Location(x, y1, z));
 					}
 				}
 			}
@@ -329,10 +330,11 @@ public class Footsteps implements ImageObserver {
 				if (l.xZEquals(new Location((int)camera.position.x * -1, (int)camera.position.y * -1, (int)camera.position.z * -1))){
 					if (camera.position.y + playerHeight + l.getY() <= 0 && camera.position.y + playerHeight + l.getY() >= -1){
 						falling = false;
+						break;
 					}
 					else if (camera.position.y + playerHeight + l.getY() > 0){
 						falling = false;
-						camera.position.y = (l.getY() * -1) - playerHeight;
+						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, (l.getY() * -1) - playerHeight, camera.position.z), 500);
 						break;
 					}
 					else
@@ -340,13 +342,14 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 			if (falling && !jumping)
-				camera.flyDown(gravity / percentOf60);
+				//camera.position.y += 1;
+				moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y + (gravity / percentOf60), camera.position.z), 500);
 			else if (jumping){
 				if (jumpFrame < jumpDistance){
 					if (jumpDistance - 1 == jumpFrame)
-						camera.flyUp(jumpSpeed / 2 / percentOf60);
+						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y - (jumpSpeed / 2 / percentOf60), camera.position.z), 500);
 					else
-						camera.flyUp(jumpSpeed / percentOf60);
+						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y - (jumpSpeed / percentOf60), camera.position.z), 500);
 					jumpFrame += percentOf60;
 				}
 				else if (jumpFreezeFrame < jumpFreezeLength){
@@ -354,7 +357,7 @@ public class Footsteps implements ImageObserver {
 					jumpFreezeFrame += percentOf60;
 				}
 				else if (jumpFreezeFrame == jumpFreezeLength){
-					camera.flyDown(gravity / 2 / percentOf60);
+					moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y + (gravity / 2 / percentOf60), camera.position.z), 500);
 					jumpFreezeFrame += percentOf60;
 				}
 				else {
@@ -363,21 +366,6 @@ public class Footsteps implements ImageObserver {
 					jumpFrame = 0;
 					jumpFreezeFrame = 0;
 				}
-			}
-
-			if (increase <= 1 && increase > 0){
-				if (increase >= 0.5f){
-					camera.flyUp(0.5f);
-					increase -= 0.5f;
-				}
-				else {
-					camera.flyUp(0f);
-					increase = 0;
-				}
-			}
-			else if (increase > 0){
-				camera.position.y -= 1f;
-				increase -= 1;
 			}
 
 			GL11.glLoadIdentity();
@@ -402,5 +390,29 @@ public class Footsteps implements ImageObserver {
 	public boolean imageUpdate(Image arg0, int arg1, int arg2, int arg3,
 			int arg4, int arg5){
 		return false;
+	}
+
+	public void moveCameraSmooth(Location oldLoc, Location newLoc, int stages){
+		if (!smoothing){
+			smoothing = true;
+			
+			stages = 100;
+
+			float xDiff = newLoc.getX() - oldLoc.getX();
+			float yDiff = newLoc.getY() - oldLoc.getY();
+			float zDiff = newLoc.getZ() - oldLoc.getZ();
+
+			float xPerStage = xDiff / stages;
+			float yPerStage = yDiff / stages;
+			float zPerStage = zDiff / stages;
+
+			for (int i = 0; i < stages; i++){
+				camera.position.x += xPerStage;
+				camera.position.y += yPerStage;
+				camera.position.z += zPerStage;
+				System.out.println(i);
+			}
+			smoothing = false;
+		}
 	}
 }
