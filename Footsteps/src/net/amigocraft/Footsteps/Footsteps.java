@@ -263,7 +263,7 @@ public class Footsteps implements ImageObserver {
 				camera.strafeRight(movementSpeed * dt);
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)){
-				if (!jumping){
+				if (!jumping && !falling){
 					jumping = true;
 					jumpFrame = 0;
 				}
@@ -320,8 +320,8 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 
-			if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
-				camera.flyDown(movementSpeed * dt);
+			/*if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
+				camera.flyDown(movementSpeed * dt);*/
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_L))
 				lightPosition = new Vector3f(camera.position.x * -1, camera.position.y * -1, camera.position.z * -1);
