@@ -395,8 +395,6 @@ public class Footsteps implements ImageObserver {
 	public void moveCameraSmooth(Location oldLoc, Location newLoc, int stages){
 		if (!smoothing){
 			smoothing = true;
-			
-			stages = 100;
 
 			float xDiff = newLoc.getX() - oldLoc.getX();
 			float yDiff = newLoc.getY() - oldLoc.getY();
@@ -405,13 +403,13 @@ public class Footsteps implements ImageObserver {
 			float xPerStage = xDiff / stages;
 			float yPerStage = yDiff / stages;
 			float zPerStage = zDiff / stages;
-
+			
 			for (int i = 0; i < stages; i++){
 				camera.position.x += xPerStage;
 				camera.position.y += yPerStage;
 				camera.position.z += zPerStage;
-				System.out.println(i);
 			}
+			
 			smoothing = false;
 		}
 	}
