@@ -88,8 +88,8 @@ public class Footsteps implements ImageObserver {
 		GL11.glEnable(GL11.GL_LIGHT0);
 		GL11.glLightModel(GL11.GL_LIGHT_MODEL_AMBIENT, asFloatBuffer(new float[]{0.05f, 0.05f, 0.05f, 1f}));
 		GL11.glLight(GL11.GL_LIGHT0, GL11.GL_DIFFUSE, asFloatBuffer(new float[]{1.5f, 1.5f, 1.5f, 1f}));
-		GL11.glEnable(GL11.GL_CULL_FACE);
-		GL11.glCullFace(GL11.GL_FRONT);
+		//GL11.glEnable(GL11.GL_CULL_FACE);
+		//GL11.glCullFace(GL11.GL_FRONT);
 		GL11.glEnable(GL11.GL_COLOR_MATERIAL);
 		GL11.glColorMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE);
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
