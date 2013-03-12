@@ -39,8 +39,8 @@ public class Footsteps implements ImageObserver {
 	float maxPitch = 90;
 	float minPitch = -90;
 	public float jumpFrame = 0;
+	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
-	public float increase = 0;
 
 	public boolean jumping = false;
 	public boolean falling = true;
@@ -48,9 +48,9 @@ public class Footsteps implements ImageObserver {
 
 	public int playerHeight = 10;
 	public float gravity = 0.5f;
-	public float jumpSpeed = 0.5f;
-	public float jumpDistance = 10;
-	public float jumpFreezeLength = 1;
+	public float jumpSpeed = 1f;
+	public float jumpDistance = 10f;
+	public float jumpFreezeLength = 1f;
 
 	public boolean wireframe = false;
 	public boolean colorize = false;
@@ -337,35 +337,45 @@ public class Footsteps implements ImageObserver {
 						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, (l.getY() * -1) - playerHeight, camera.position.z), 500);
 						break;
 					}
-					else
+					else {
 						falling = true;
+						break;
+					}
 				}
 			}
 			if (falling && !jumping)
 				//camera.position.y += 1;
 				moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y + (gravity / percentOf60), camera.position.z), 500);
 			else if (jumping){
-				if (jumpFrame < jumpDistance){
-					if (jumpDistance - 1 == jumpFrame)
-						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y - (jumpSpeed / 2 / percentOf60), camera.position.z), 500);
-					else
-						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y - (jumpSpeed / percentOf60), camera.position.z), 500);
-					jumpFrame += percentOf60;
+				if (jumpSpeedFrame - 1 >= jumpSpeed){
+					if (jumpFrame < jumpDistance){
+						if (jumpSpeed - 1 == jumpSpeedFrame)
+							moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y - (1 / 2 / percentOf60), camera.position.z), 500);
+						else
+							moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y - (1 / percentOf60), camera.position.z), 500);
+						jumpFrame += percentOf60;
+						jumpSpeedFrame = 0;
+					}
+					else if (jumpFreezeFrame < jumpFreezeLength){
+						System.out.println("freeze");
+						jumpFrame += percentOf60;
+						jumpFreezeFrame += percentOf60;
+						jumpSpeedFrame = 0;
+					}
+					else if (jumpFreezeFrame == jumpFreezeLength){
+						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y + (gravity / 2 / percentOf60), camera.position.z), 500);
+						jumpFreezeFrame += percentOf60;
+					}
+					else {
+						jumping = false;
+						falling = true;
+						jumpFrame = 0;
+						jumpFreezeFrame = 0;
+						jumpSpeedFrame = 0;
+					}
 				}
-				else if (jumpFreezeFrame < jumpFreezeLength){
-					jumpFrame += percentOf60;
-					jumpFreezeFrame += percentOf60;
-				}
-				else if (jumpFreezeFrame == jumpFreezeLength){
-					moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y + (gravity / 2 / percentOf60), camera.position.z), 500);
-					jumpFreezeFrame += percentOf60;
-				}
-				else {
-					jumping = false;
-					falling = true;
-					jumpFrame = 0;
-					jumpFreezeFrame = 0;
-				}
+				else
+					jumpSpeedFrame += 1;
 			}
 
 			GL11.glLoadIdentity();
@@ -393,24 +403,18 @@ public class Footsteps implements ImageObserver {
 	}
 
 	public void moveCameraSmooth(Location oldLoc, Location newLoc, int stages){
-		if (!smoothing){
-			smoothing = true;
+		float xDiff = newLoc.getX() - oldLoc.getX();
+		float yDiff = newLoc.getY() - oldLoc.getY();
+		float zDiff = newLoc.getZ() - oldLoc.getZ();
 
-			float xDiff = newLoc.getX() - oldLoc.getX();
-			float yDiff = newLoc.getY() - oldLoc.getY();
-			float zDiff = newLoc.getZ() - oldLoc.getZ();
+		float xPerStage = xDiff / stages;
+		float yPerStage = yDiff / stages;
+		float zPerStage = zDiff / stages;
 
-			float xPerStage = xDiff / stages;
-			float yPerStage = yDiff / stages;
-			float zPerStage = zDiff / stages;
-			
-			for (int i = 0; i < stages; i++){
-				camera.position.x += xPerStage;
-				camera.position.y += yPerStage;
-				camera.position.z += zPerStage;
-			}
-			
-			smoothing = false;
+		for (int i = 0; i < stages; i++){
+			camera.position.x += xPerStage;
+			camera.position.y += yPerStage;
+			camera.position.z += zPerStage;
 		}
 	}
 }
