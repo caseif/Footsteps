@@ -1,6 +1,7 @@
 package net.amigocraft.Footsteps;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
@@ -20,6 +21,9 @@ import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
+import org.newdawn.slick.SlickException;
+import org.newdawn.slick.UnicodeFont;
+import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
@@ -44,6 +48,10 @@ public class Footsteps implements ImageObserver {
 
 	public boolean jumping = false;
 	public boolean falling = true;
+	public boolean left = false;
+	public boolean right = false;
+	public boolean forward = false;
+	public boolean backward = false;
 	public boolean smoothing = false;
 
 	public int playerHeight = 10;
@@ -60,14 +68,17 @@ public class Footsteps implements ImageObserver {
 	List<Location> terrainCap = new ArrayList<Location>();
 
 	public Texture texture;
+	
+	public UnicodeFont font;
 
 	public static void main(String[] args){
 		new Footsteps();
 	}
 
+	@SuppressWarnings("unchecked")
 	public Footsteps(){
 		try {
-			Display.setDisplayMode(new DisplayMode(1280, 720));
+			Display.setDisplayMode(new DisplayMode(Display.getDesktopDisplayMode().getWidth() - 20, Display.getDesktopDisplayMode().getHeight() - 100));
 			Display.setTitle("3D Demo");
 			Display.create();
 		}
@@ -101,6 +112,16 @@ public class Footsteps implements ImageObserver {
 			texture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
 		}
 		catch (Exception ex){
+			ex.printStackTrace();
+		}
+		
+		try {
+			font = new UnicodeFont(new java.awt.Font("Times New Roman", Font.BOLD, 288));
+			font.getEffects().add(new ColorEffect(Color.RED));
+			font.addAsciiGlyphs();
+		}
+		catch (Exception ex){
+			System.out.println("An error occurred while loading glyphs");
 			ex.printStackTrace();
 		}
 
@@ -140,7 +161,7 @@ public class Footsteps implements ImageObserver {
 			GL11.glEnd();
 		}
 		GL11.glEndList();*/
-
+		
 		int heightMapListHandle = GL11.glGenLists(1);
 		GL11.glNewList(heightMapListHandle, GL11.GL_COMPILE);
 		{
@@ -228,6 +249,8 @@ public class Footsteps implements ImageObserver {
 
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+			
+			//drawString("Derp");
 
 			if (wireframe)
 				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
@@ -251,16 +274,32 @@ public class Footsteps implements ImageObserver {
 				camera.setPitch(dy * mouseSensitivity);
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_W))
-				camera.walkForward(movementSpeed * dt);
+				forward = true;
+			else if (forward){
+				camera.walkForward(0);
+				forward = false;
+			}
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_S))
-				camera.walkBackwards(movementSpeed * dt);
+				backward = true;
+			else if (backward){
+				camera.walkBackward(0);
+				backward = false;
+			}
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_A))
-				camera.strafeLeft(movementSpeed * dt);
+				left = true;
+			else if (left){
+				camera.strafeLeft(0);
+				left = false;
+			}
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_D))
-				camera.strafeRight(movementSpeed * dt);
+				right = true;
+			else if (right){
+				camera.strafeRight(0);
+				right = false;
+			}
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)){
 				if (!jumping && !falling){
@@ -344,26 +383,24 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 			if (falling && !jumping)
-				//camera.position.y += 1;
-				moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y + (gravity / percentOf60), camera.position.z), 500);
+				camera.velocity.setY(gravity / percentOf60);
 			else if (jumping){
 				if (jumpSpeedFrame - 1 >= jumpSpeed){
 					if (jumpFrame < jumpDistance){
 						if (jumpSpeed - 1 == jumpSpeedFrame)
-							moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y - (1 / 2 / percentOf60), camera.position.z), 500);
+							camera.velocity.setY(-(1 / 2 / percentOf60));
 						else
-							moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y - (1 / percentOf60), camera.position.z), 500);
+							camera.velocity.setY(-(1 / percentOf60));
 						jumpFrame += percentOf60;
 						jumpSpeedFrame = 0;
 					}
 					else if (jumpFreezeFrame < jumpFreezeLength){
-						System.out.println("freeze");
 						jumpFrame += percentOf60;
 						jumpFreezeFrame += percentOf60;
 						jumpSpeedFrame = 0;
 					}
 					else if (jumpFreezeFrame == jumpFreezeLength){
-						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, camera.position.y + (gravity / 2 / percentOf60), camera.position.z), 500);
+						camera.velocity.setY(gravity / 2 / percentOf60);
 						jumpFreezeFrame += percentOf60;
 					}
 					else {
@@ -377,6 +414,17 @@ public class Footsteps implements ImageObserver {
 				else
 					jumpSpeedFrame += 1;
 			}
+			else
+				camera.velocity.setY(0);
+			
+			if (left)
+				camera.strafeLeft(movementSpeed * dt);
+			if (right)
+				camera.strafeRight(movementSpeed * dt);
+			if (forward)
+				camera.walkForward(movementSpeed * dt);
+			if (backward)
+				camera.walkBackward(movementSpeed * dt);
 
 			GL11.glLoadIdentity();
 
@@ -416,5 +464,15 @@ public class Footsteps implements ImageObserver {
 			camera.position.y += yPerStage;
 			camera.position.z += zPerStage;
 		}
+	}
+	
+	public void drawString(String str){
+		/*GL11.glTranslatef(0, 0, 0);
+		GL11.glRotatef(camera.pitch * -1, 1.0f, 0.0f, 0.0f);
+		GL11.glRotatef(camera.yaw * -1, 0.0f, 1.0f, 0.0f);
+		//font.drawString(0f, 0f, str);
+		GL11.glRotatef(camera.pitch, 1.0f, 0.0f, 0.0f);
+		GL11.glRotatef(camera.yaw, 0.0f, 1.0f, 0.0f);
+		GL11.glTranslatef(camera.position.x, camera.position.y, camera.position.z);*/
 	}
 }
