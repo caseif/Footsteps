@@ -40,8 +40,8 @@ public class Footsteps implements ImageObserver {
 
 	float mouseSensitivity = 0.05f;
 	float movementSpeed = 20.0f;
-	float maxPitch = 90;
-	float minPitch = -90;
+	float maxPitch = 70;
+	float minPitch = -70;
 	public float jumpFrame = 0;
 	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
@@ -55,9 +55,9 @@ public class Footsteps implements ImageObserver {
 	public boolean smoothing = false;
 
 	public int playerHeight = 10;
-	public float gravity = 0.5f;
-	public float jumpSpeed = 1f;
-	public float jumpDistance = 10f;
+	public float gravity = 0.3f;
+	public float jumpSpeed = 0.3f;
+	public float jumpDistance = 13f;
 	public float jumpFreezeLength = 1f;
 
 	public boolean wireframe = false;
@@ -68,7 +68,7 @@ public class Footsteps implements ImageObserver {
 	List<Location> terrainCap = new ArrayList<Location>();
 
 	public Texture texture;
-	
+
 	public UnicodeFont font;
 
 	public static void main(String[] args){
@@ -114,7 +114,7 @@ public class Footsteps implements ImageObserver {
 		catch (Exception ex){
 			ex.printStackTrace();
 		}
-		
+
 		try {
 			font = new UnicodeFont(new java.awt.Font("Times New Roman", Font.BOLD, 288));
 			font.getEffects().add(new ColorEffect(Color.RED));
@@ -161,7 +161,7 @@ public class Footsteps implements ImageObserver {
 			GL11.glEnd();
 		}
 		GL11.glEndList();*/
-		
+
 		int heightMapListHandle = GL11.glGenLists(1);
 		GL11.glNewList(heightMapListHandle, GL11.GL_COMPILE);
 		{
@@ -249,7 +249,7 @@ public class Footsteps implements ImageObserver {
 
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-			
+
 			//drawString("Derp");
 
 			if (wireframe)
@@ -374,6 +374,7 @@ public class Footsteps implements ImageObserver {
 					else if (camera.position.y + playerHeight + l.getY() > 0){
 						falling = false;
 						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, (l.getY() * -1) - playerHeight, camera.position.z), 500);
+						//camera.velocity.setY(-l.getY() - playerHeight);
 						break;
 					}
 					else {
@@ -385,38 +386,31 @@ public class Footsteps implements ImageObserver {
 			if (falling && !jumping)
 				camera.velocity.setY(gravity / percentOf60);
 			else if (jumping){
-				if (jumpSpeedFrame - 1 >= jumpSpeed){
-					if (jumpFrame < jumpDistance){
-						if (jumpSpeed - 1 == jumpSpeedFrame)
-							camera.velocity.setY(-(1 / 2 / percentOf60));
-						else
-							camera.velocity.setY(-(1 / percentOf60));
-						jumpFrame += percentOf60;
-						jumpSpeedFrame = 0;
-					}
-					else if (jumpFreezeFrame < jumpFreezeLength){
-						jumpFrame += percentOf60;
-						jumpFreezeFrame += percentOf60;
-						jumpSpeedFrame = 0;
-					}
-					else if (jumpFreezeFrame == jumpFreezeLength){
-						camera.velocity.setY(gravity / 2 / percentOf60);
-						jumpFreezeFrame += percentOf60;
-					}
-					else {
-						jumping = false;
-						falling = true;
-						jumpFrame = 0;
-						jumpFreezeFrame = 0;
-						jumpSpeedFrame = 0;
-					}
+				if (jumpFrame < jumpDistance){
+					if (jumpDistance - 1f == jumpFrame)
+						camera.velocity.setY(-(jumpSpeed / 2 / percentOf60));
+					else
+						camera.velocity.setY(-(jumpSpeed / percentOf60));
+					jumpFrame += percentOf60;
 				}
-				else
-					jumpSpeedFrame += 1;
+				else if (jumpFreezeFrame < jumpFreezeLength){
+					jumpFrame += percentOf60;
+					jumpFreezeFrame += percentOf60;
+				}
+				else if (jumpFreezeFrame == jumpFreezeLength){
+					camera.velocity.setY(gravity / 2 / percentOf60);
+					jumpFreezeFrame += percentOf60;
+				}
+				else {
+					jumping = false;
+					falling = true;
+					jumpFrame = 0;
+					jumpFreezeFrame = 0;
+				}
 			}
 			else
 				camera.velocity.setY(0);
-			
+
 			if (left)
 				camera.strafeLeft(movementSpeed * dt);
 			if (right)
@@ -465,7 +459,7 @@ public class Footsteps implements ImageObserver {
 			camera.position.z += zPerStage;
 		}
 	}
-	
+
 	public void drawString(String str){
 		/*GL11.glTranslatef(0, 0, 0);
 		GL11.glRotatef(camera.pitch * -1, 1.0f, 0.0f, 0.0f);
