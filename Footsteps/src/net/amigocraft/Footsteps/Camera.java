@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
 public class Camera {
-
+	
 	Vector3f position = null;
 	Vector3f velocity = null;
 	//the rotation around the Y axis of the camera
@@ -28,29 +28,95 @@ public class Camera {
 	public void walkForward(float distance){
 		velocity.setX(distance * -(float)Math.sin(Math.toRadians(yaw)));
 		velocity.setZ(distance * (float)Math.cos(Math.toRadians(yaw)));
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+		}
 	}
 
 	public void walkBackward(float distance){
 		velocity.setX(distance * (float)Math.sin(Math.toRadians(yaw)));
 		velocity.setZ(distance * -(float)Math.cos(Math.toRadians(yaw)));
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
 	}
 
 	public void strafeLeft(float distance){
 		velocity.setX(distance * -(float)Math.sin(Math.toRadians(yaw - 90)));
 		velocity.setZ(distance * (float)Math.cos(Math.toRadians(yaw - 90)));
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
 	}
 
 	public void strafeRight(float distance){
 		velocity.setX(distance * -(float)Math.sin(Math.toRadians(yaw + 90)));
 		velocity.setZ(distance * (float)Math.cos(Math.toRadians(yaw + 90)));
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
 	}
 
 	public void flyUp(float distance){
 		velocity.setY(-distance);
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
 	}
 
 	public void flyDown(float distance){
 		velocity.setY(distance);
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX(), position.getY() + velocity.getY(), position.getZ()))){
+				velocity.setY(0);
+				Footsteps.jumping = false;
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY() + velocity.getY(), position.getZ()))){
+				velocity.setY(0);
+				Footsteps.jumping = false;
+				break;
+			}
+		}
+	}
+	
+	public void freeze(){
+		velocity.set(0, 0, 0);
 	}
 
 	public void lookThrough(){

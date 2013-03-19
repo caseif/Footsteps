@@ -1,5 +1,7 @@
 package net.amigocraft.Footsteps;
 
+import java.awt.Point;
+
 public class Location {
 	
 	private float x;
@@ -34,6 +36,5 @@ public class Location {
 	
 	public boolean xZEquals(Location l){
 		return x == l.getX() && z == l.getZ();
-	}
-	
+	}	
 }

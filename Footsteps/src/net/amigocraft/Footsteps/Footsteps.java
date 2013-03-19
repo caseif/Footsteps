@@ -4,8 +4,10 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.awt.image.ImageObserver;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,7 @@ import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
 public class Footsteps implements ImageObserver {
-
+	
 	Camera camera = new Camera(250, 50, 150);
 	float dx = 0.0f;
 	float dy = 0.0f;
@@ -46,7 +48,7 @@ public class Footsteps implements ImageObserver {
 	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
 
-	public boolean jumping = false;
+	public static boolean jumping = false;
 	public boolean falling = true;
 	public boolean left = false;
 	public boolean right = false;
@@ -66,6 +68,7 @@ public class Footsteps implements ImageObserver {
 	public boolean colorSky = true;
 
 	List<Location> terrainCap = new ArrayList<Location>();
+	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
 
 	public Texture texture;
 
@@ -79,10 +82,33 @@ public class Footsteps implements ImageObserver {
 	public Footsteps(){
 		try {
 			Display.setDisplayMode(new DisplayMode(Display.getDesktopDisplayMode().getWidth() - 20, Display.getDesktopDisplayMode().getHeight() - 100));
-			Display.setTitle("3D Demo");
+			Display.setTitle("Footsteps");
+			ByteBuffer[] icons = null;
+			if (System.getProperty("os.name").startsWith("Windows")){
+				icons = new ByteBuffer[2];
+				BufferedImage icon1 = ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png"));
+				BufferedImage icon2 = icon1;
+				icon1.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+				icon1.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+				icons[0] = ByteBuffer.wrap(((DataBufferByte)icon1.getRaster().getDataBuffer()).getData());
+				icons[1] = ByteBuffer.wrap(((DataBufferByte)icon2.getRaster().getDataBuffer()).getData());
+			}
+			else if (System.getProperty("os.name").startsWith("Mac")){
+				icons = new ByteBuffer[1];
+				BufferedImage icon1 = ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png"));
+				icon1.getScaledInstance(128, 128, Image.SCALE_SMOOTH);
+				icons[0] = ByteBuffer.wrap(((DataBufferByte)icon1.getRaster().getDataBuffer()).getData());
+			}
+			else {
+				icons = new ByteBuffer[1];
+				BufferedImage icon1 = ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png"));
+				icon1.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+				icons[0] = ByteBuffer.wrap(((DataBufferByte)icon1.getRaster().getDataBuffer()).getData());
+			}
+			Display.setIcon(icons);
 			Display.create();
 		}
-		catch (LWJGLException ex){
+		catch (Exception ex){
 			ex.printStackTrace();
 		}
 
@@ -128,7 +154,7 @@ public class Footsteps implements ImageObserver {
 		Mouse.setGrabbed(true);
 
 		// this code is here as a reference for future models
-		/*int bunnyListHandle = GL11.glGenLists(1);
+		int bunnyListHandle = GL11.glGenLists(1);
 		GL11.glNewList(bunnyListHandle, GL11.GL_COMPILE);
 		{
 			GL11.glBegin(GL11.GL_TRIANGLES);
@@ -160,7 +186,7 @@ public class Footsteps implements ImageObserver {
 
 			GL11.glEnd();
 		}
-		GL11.glEndList();*/
+		GL11.glEndList();
 
 		int heightMapListHandle = GL11.glGenLists(1);
 		GL11.glNewList(heightMapListHandle, GL11.GL_COMPILE);
@@ -258,6 +284,7 @@ public class Footsteps implements ImageObserver {
 				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
 
 			GL11.glCallList(heightMapListHandle);
+			//GL11.glCallList(bunnyListHandle);
 
 			time = System.nanoTime();
 			dt = (time - lastTime) / 1000000000f;
@@ -384,13 +411,13 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 			if (falling && !jumping)
-				camera.velocity.setY(gravity / percentOf60);
+				camera.flyDown(gravity / percentOf60);
 			else if (jumping){
 				if (jumpFrame < jumpDistance){
 					if (jumpDistance - 1f == jumpFrame)
-						camera.velocity.setY(-(jumpSpeed / 2 / percentOf60));
+						camera.flyUp(-(jumpSpeed / 2 / percentOf60));
 					else
-						camera.velocity.setY(-(jumpSpeed / percentOf60));
+						camera.flyUp(-(jumpSpeed / percentOf60));
 					jumpFrame += percentOf60;
 				}
 				else if (jumpFreezeFrame < jumpFreezeLength){
@@ -398,7 +425,7 @@ public class Footsteps implements ImageObserver {
 					jumpFreezeFrame += percentOf60;
 				}
 				else if (jumpFreezeFrame == jumpFreezeLength){
-					camera.velocity.setY(gravity / 2 / percentOf60);
+					camera.flyDown(gravity / 2 / percentOf60);
 					jumpFreezeFrame += percentOf60;
 				}
 				else {
