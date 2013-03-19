@@ -15,7 +15,6 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
@@ -23,7 +22,6 @@ import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
-import org.newdawn.slick.SlickException;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.opengl.Texture;
@@ -401,7 +399,7 @@ public class Footsteps implements ImageObserver {
 					else if (camera.position.y + playerHeight + l.getY() > 0){
 						falling = false;
 						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, (l.getY() * -1) - playerHeight, camera.position.z), 500);
-						//camera.velocity.setY(-l.getY() - playerHeight);
+						//camera.flyUp(l.getY() - playerHeight);
 						break;
 					}
 					else {
@@ -415,9 +413,9 @@ public class Footsteps implements ImageObserver {
 			else if (jumping){
 				if (jumpFrame < jumpDistance){
 					if (jumpDistance - 1f == jumpFrame)
-						camera.flyUp(-(jumpSpeed / 2 / percentOf60));
+						camera.flyUp(jumpSpeed / 2 / percentOf60);
 					else
-						camera.flyUp(-(jumpSpeed / percentOf60));
+						camera.flyUp(jumpSpeed / percentOf60);
 					jumpFrame += percentOf60;
 				}
 				else if (jumpFreezeFrame < jumpFreezeLength){
