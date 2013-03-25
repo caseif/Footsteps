@@ -424,17 +424,14 @@ public class Footsteps implements ImageObserver {
 					else
 						camera.flyUp(jumpSpeed / percentOf60);
 					jumpFrame += percentOf60;
-					System.out.println("Stage 1");
 				}
 				else if (jumpFreezeFrame < jumpFreezeLength){
 					jumpFrame += percentOf60;
 					jumpFreezeFrame += percentOf60;
-					System.out.println("Stage 2");
 				}
 				else if (jumpFreezeFrame == jumpFreezeLength){
 					camera.flyDown(gravity / 2 / percentOf60);
 					jumpFreezeFrame += percentOf60;
-					System.out.println("Stage 3");
 				}
 				else {
 					jumping = false;
