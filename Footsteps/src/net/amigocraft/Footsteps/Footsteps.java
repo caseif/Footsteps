@@ -54,15 +54,17 @@ public class Footsteps implements ImageObserver {
 	public boolean right = false;
 	public boolean forward = false;
 	public boolean backward = false;
+	public boolean ground = false;
+	
 	public boolean smoothing = false;
 	public boolean debug = false;
 	public boolean fullscreen = false;
 
 	public int playerHeight = 10;
-	public float gravity = 0.3f;
-	public float jumpSpeed = 0.3f;
-	public float jumpDistance = 18f;
-	public float jumpFreezeLength = 1f;
+	public float gravity = 0.5f;
+	public float jumpSpeed = 0.5f;
+	public float jumpDistance = 13f;
+	public float jumpFreezeLength = 2f;
 	public float lastFps = 0f;
 	public float currentTime = 0f;
 	public int currentFps = 0;
@@ -298,6 +300,7 @@ public class Footsteps implements ImageObserver {
 				drawString(10, 115, "z: " + camera.getZ());
 				drawString(10, 150, "pitch: " + camera.getPitch());
 				drawString(10, 185, "yaw: " + camera.getYaw());
+				//drawString(10, 220, "ground: " + ground);
 			}
 
 			camera.setYaw(dx * mouseSensitivity);
@@ -408,9 +411,20 @@ public class Footsteps implements ImageObserver {
 					}
 				}
 			}
-			if (falling && !jumping)
+			if (falling && !jumping){
 				camera.flyDown(gravity / percentOf60);
+				/*for (Location l : terrainCap){
+					if (l.xZEquals(new Location((int)camera.position.x * -1, (int)camera.position.y * -1, (int)camera.position.z * -1))){
+						if (l.getY() - camera.getY() > 10){
+							ground = false;
+							System.out.println(l.getY() - camera.getY());
+							break;
+						}
+					}
+				}*/
+			}
 			else if (jumping){
+				ground = false;
 				if (jumpFrame < jumpDistance){
 					if (jumpDistance - 1f == jumpFrame)
 						camera.flyUp(jumpSpeed / 2 / percentOf60);
@@ -433,8 +447,10 @@ public class Footsteps implements ImageObserver {
 					jumpFreezeFrame = 0;
 				}
 			}
-			else
+			else {
 				camera.velocity.setY(0);
+				ground = true;
+			}
 
 			if (left)
 				camera.strafeLeft(movementSpeed * delta / 1000);
@@ -553,7 +569,7 @@ public class Footsteps implements ImageObserver {
 	}
 
 	public void updateFps(){
-		if (time - lastFps > 400){
+		if (time - lastFps > 1000){
 			currentFps = (int)(1000 / delta);
 			lastFps = time;
 		}
