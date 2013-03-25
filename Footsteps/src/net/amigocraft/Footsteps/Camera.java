@@ -16,6 +16,30 @@ public class Camera {
 		position = new Vector3f(x * -1f, y * -1f, z * -1f);
 		velocity = new Vector3f(0f, 0f, 0f);
 	}
+	
+	public Location getLocation(){
+		return new Location(position.x, position.y, position.z);
+	}
+	
+	public Vector3f getVector(){
+		return position;
+	}
+	
+	public Vector3f getVelocity(){
+		return velocity;
+	}
+	
+	public float getX(){
+		return position.x;
+	}
+	
+	public float getY(){
+		return position.y;
+	}
+	
+	public float getZ(){
+		return position.z;
+	}
 
 	public void setPitch(float amount){
 		pitch += amount;

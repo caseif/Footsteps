@@ -9,6 +9,7 @@ import java.awt.image.ImageObserver;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,15 +21,18 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
+import org.newdawn.slick.SlickException;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
 public class Footsteps implements ImageObserver {
-	
+
 	Camera camera = new Camera(250, 50, 150);
 	float dx = 0.0f;
 	float dy = 0.0f;
@@ -40,8 +44,8 @@ public class Footsteps implements ImageObserver {
 
 	float mouseSensitivity = 0.05f;
 	float movementSpeed = 20.0f;
-	float maxPitch = 70;
-	float minPitch = -70;
+	float maxPitch = 80;
+	float minPitch = -80;
 	public float jumpFrame = 0;
 	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
@@ -57,7 +61,7 @@ public class Footsteps implements ImageObserver {
 	public int playerHeight = 10;
 	public float gravity = 0.3f;
 	public float jumpSpeed = 0.3f;
-	public float jumpDistance = 13f;
+	public float jumpDistance = 18f;
 	public float jumpFreezeLength = 1f;
 
 	public boolean wireframe = false;
@@ -68,15 +72,18 @@ public class Footsteps implements ImageObserver {
 	List<Location> terrainCap = new ArrayList<Location>();
 	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
 
-	public Texture texture;
+	public Texture grassTexture;
 
-	public UnicodeFont font;
+	// GUI related variables
+	private static UnicodeFont font;
+
+	private static FloatBuffer perspectiveProjectionMatrix = BufferUtils.createFloatBuffer(16);
+	private static FloatBuffer orthographicProjectionMatrix = BufferUtils.createFloatBuffer(16);
 
 	public static void main(String[] args){
 		new Footsteps();
 	}
 
-	@SuppressWarnings("unchecked")
 	public Footsteps(){
 		try {
 			Display.setDisplayMode(new DisplayMode(Display.getDesktopDisplayMode().getWidth() - 20, Display.getDesktopDisplayMode().getHeight() - 100));
@@ -127,32 +134,26 @@ public class Footsteps implements ImageObserver {
 		//GL11.glCullFace(GL11.GL_FRONT);
 		GL11.glEnable(GL11.GL_COLOR_MATERIAL);
 		GL11.glColorMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 
 		if (colorSky)
 			GL11.glClearColor(0, 0.7f, 0.9f, 1.1f);
 
 		try {
-			texture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
+			grassTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
 		}
 		catch (Exception ex){
 			ex.printStackTrace();
 		}
 
-		try {
-			font = new UnicodeFont(new java.awt.Font("Times New Roman", Font.BOLD, 288));
-			font.getEffects().add(new ColorEffect(Color.RED));
-			font.addAsciiGlyphs();
-		}
-		catch (Exception ex){
-			System.out.println("An error occurred while loading glyphs");
-			ex.printStackTrace();
-		}
+		//setUpFont();
 
 		Mouse.setGrabbed(true);
 
 		// this code is here as a reference for future models
-		int bunnyListHandle = GL11.glGenLists(1);
+		/*int bunnyListHandle = GL11.glGenLists(1);
 		GL11.glNewList(bunnyListHandle, GL11.GL_COMPILE);
 		{
 			GL11.glBegin(GL11.GL_TRIANGLES);
@@ -184,7 +185,7 @@ public class Footsteps implements ImageObserver {
 
 			GL11.glEnd();
 		}
-		GL11.glEndList();
+		GL11.glEndList();*/
 
 		int heightMapListHandle = GL11.glGenLists(1);
 		GL11.glNewList(heightMapListHandle, GL11.GL_COMPILE);
@@ -201,7 +202,7 @@ public class Footsteps implements ImageObserver {
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glColor3f(0.3f, 0.3f, 0.3f);
 			if (textured)
-				texture.bind();
+				grassTexture.bind();
 			GL11.glMaterialf(GL11.GL_BACK, GL11.GL_SHININESS, 1f);
 			for (float x = 1; x < hm.getWidth(this); x++){
 				for (float z = 1; z < hm.getHeight(this); z++){
@@ -274,7 +275,8 @@ public class Footsteps implements ImageObserver {
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
-			//drawString("Derp");
+			//drawString("Test");
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
 
 			if (wireframe)
 				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
@@ -286,7 +288,11 @@ public class Footsteps implements ImageObserver {
 
 			time = System.nanoTime();
 			dt = (time - lastTime) / 1000000000f;
+			if (dt == 0){
+				dt = 0.01f;
+			}
 			float percentOf60 = (1 / (float)60) / dt;
+			//System.out.println(percentOf60);
 			lastTime = time;
 
 			dx = Mouse.getDX();
@@ -399,7 +405,6 @@ public class Footsteps implements ImageObserver {
 					else if (camera.position.y + playerHeight + l.getY() > 0){
 						falling = false;
 						moveCameraSmooth(new Location(camera.position.x, camera.position.y, camera.position.z), new Location(camera.position.x, (l.getY() * -1) - playerHeight, camera.position.z), 500);
-						//camera.flyUp(l.getY() - playerHeight);
 						break;
 					}
 					else {
@@ -411,20 +416,25 @@ public class Footsteps implements ImageObserver {
 			if (falling && !jumping)
 				camera.flyDown(gravity / percentOf60);
 			else if (jumping){
+				//System.out.println(jumpFrame);
+				//System.out.println(percentOf60);
 				if (jumpFrame < jumpDistance){
 					if (jumpDistance - 1f == jumpFrame)
 						camera.flyUp(jumpSpeed / 2 / percentOf60);
 					else
 						camera.flyUp(jumpSpeed / percentOf60);
 					jumpFrame += percentOf60;
+					System.out.println("Stage 1");
 				}
 				else if (jumpFreezeFrame < jumpFreezeLength){
 					jumpFrame += percentOf60;
 					jumpFreezeFrame += percentOf60;
+					System.out.println("Stage 2");
 				}
 				else if (jumpFreezeFrame == jumpFreezeLength){
 					camera.flyDown(gravity / 2 / percentOf60);
 					jumpFreezeFrame += percentOf60;
+					System.out.println("Stage 3");
 				}
 				else {
 					jumping = false;
@@ -485,13 +495,42 @@ public class Footsteps implements ImageObserver {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	private static void setUpFont(){
+		Font awtFont = new Font("Verdana", Font.BOLD, 108);
+		font = new UnicodeFont(awtFont);
+		font.getEffects().add(new ColorEffect(Color.RED));
+		font.addAsciiGlyphs();
+		try {
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			font.loadGlyphs();
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+		}
+		catch (Exception ex){
+			ex.printStackTrace();
+			System.exit(1);
+		}
+	}
+
 	public void drawString(String str){
-		/*GL11.glTranslatef(0, 0, 0);
-		GL11.glRotatef(camera.pitch * -1, 1.0f, 0.0f, 0.0f);
-		GL11.glRotatef(camera.yaw * -1, 0.0f, 1.0f, 0.0f);
-		//font.drawString(0f, 0f, str);
-		GL11.glRotatef(camera.pitch, 1.0f, 0.0f, 0.0f);
-		GL11.glRotatef(camera.yaw, 0.0f, 1.0f, 0.0f);
-		GL11.glTranslatef(camera.position.x, camera.position.y, camera.position.z);*/
+		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, perspectiveProjectionMatrix);
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glLoadIdentity();
+		GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, 1, -1);
+		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, orthographicProjectionMatrix);
+		GL11.glLoadMatrix(perspectiveProjectionMatrix);
+		GL11.glMatrixMode(GL11.GL_MODELVIEW_MATRIX);
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glLoadMatrix(orthographicProjectionMatrix);
+		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		GL11.glPushMatrix();
+		GL11.glDisable(GL11.GL_LIGHTING);
+		font.drawString(10, 10, str);
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_LIGHTING);
+		GL11.glPopMatrix();
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glLoadMatrix(perspectiveProjectionMatrix);
+		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 	}
 }

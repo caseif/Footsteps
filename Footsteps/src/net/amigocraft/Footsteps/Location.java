@@ -1,7 +1,5 @@
 package net.amigocraft.Footsteps;
 
-import java.awt.Point;
-
 public class Location {
 	
 	private float x;
