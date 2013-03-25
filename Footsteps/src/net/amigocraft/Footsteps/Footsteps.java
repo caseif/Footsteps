@@ -4,12 +4,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.awt.image.ImageObserver;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -19,6 +15,8 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.LWJGLException;
+import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
@@ -36,9 +34,9 @@ public class Footsteps implements ImageObserver {
 	Camera camera = new Camera(250, 50, 150);
 	float dx = 0.0f;
 	float dy = 0.0f;
-	float dt = 0.0f;
-	float lastTime = 0.0f;
-	float time = System.nanoTime();
+	float delta = 0;
+	long lastTime = 0;
+	long time = getTime();
 	static Vector3f lightPosition = new Vector3f(-500f, -500f, 1000f);
 	long lastPress = (int)System.currentTimeMillis();
 
@@ -57,12 +55,17 @@ public class Footsteps implements ImageObserver {
 	public boolean forward = false;
 	public boolean backward = false;
 	public boolean smoothing = false;
+	public boolean debug = false;
+	public boolean fullscreen = false;
 
 	public int playerHeight = 10;
 	public float gravity = 0.3f;
 	public float jumpSpeed = 0.3f;
 	public float jumpDistance = 18f;
 	public float jumpFreezeLength = 1f;
+	public float lastFps = 0f;
+	public float currentTime = 0f;
+	public int currentFps = 0;
 
 	public boolean wireframe = false;
 	public boolean colorize = false;
@@ -72,13 +75,12 @@ public class Footsteps implements ImageObserver {
 	List<Location> terrainCap = new ArrayList<Location>();
 	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
 
+	public float[] skyColor = new float[]{0f, 0.7f, 0.9f, 1.1f};
+
 	public Texture grassTexture;
 
 	// GUI related variables
 	private static UnicodeFont font;
-
-	private static FloatBuffer perspectiveProjectionMatrix = BufferUtils.createFloatBuffer(16);
-	private static FloatBuffer orthographicProjectionMatrix = BufferUtils.createFloatBuffer(16);
 
 	public static void main(String[] args){
 		new Footsteps();
@@ -130,12 +132,14 @@ public class Footsteps implements ImageObserver {
 		//GL11.glCullFace(GL11.GL_FRONT);
 		GL11.glEnable(GL11.GL_COLOR_MATERIAL);
 		GL11.glColorMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE);
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_ALPHA_TEST);
+		GL11.glAlphaFunc(GL11.GL_GREATER, 0);
 
 		if (colorSky)
-			GL11.glClearColor(0, 0.7f, 0.9f, 1.1f);
+			GL11.glClearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3]);
 
 		try {
 			grassTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
@@ -269,8 +273,6 @@ public class Footsteps implements ImageObserver {
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
-			drawString("Test");
-
 			if (wireframe)
 				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 			else
@@ -280,18 +282,23 @@ public class Footsteps implements ImageObserver {
 			GL11.glCallList(heightMapListHandle);
 			//GL11.glCallList(bunnyListHandle);
 
-			time = System.nanoTime();
-			dt = (time - lastTime) / 1000000000f;
-			if (dt == 0){
-				dt = 0.01f;
-			}
-			float percentOf60 = (1 / (float)60) / dt;
-			//System.out.println(percentOf60);
+			time = getTime();
+			delta = time - lastTime;
+			float percentOf60 = (1000 / delta) / 60;
 			lastTime = time;
 
 			dx = Mouse.getDX();
 			dy = Mouse.getDY() * -1;
 
+			updateFps();
+			if (debug){
+				drawString(10, 10, "fps: " + currentFps);
+				drawString(10, 45, "x: " + camera.getX());
+				drawString(10, 80, "y: " + camera.getY());
+				drawString(10, 115, "z: " + camera.getZ());
+				drawString(10, 150, "pitch: " + camera.getPitch());
+				drawString(10, 185, "yaw: " + camera.getYaw());
+			}
 
 			camera.setYaw(dx * mouseSensitivity);
 
@@ -343,36 +350,30 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 
-			/*if (Keyboard.isKeyDown(Keyboard.KEY_C)){
-				if (System.currentTimeMillis() - lastPress > 200){
-					if (colorize)
-						colorize = false;
-					else
-						colorize = true;
-					lastPress = System.currentTimeMillis();
-				}
-				System.out.println(colorize);
-			}
-
-			if (Keyboard.isKeyDown(Keyboard.KEY_T)){
-				if (System.currentTimeMillis() - lastPress > 200){
-					if (textured)
-						textured = false;
-					else
-						textured = true;
-					lastPress = System.currentTimeMillis();
-				}
-			}
-
-			if (Keyboard.isKeyDown(Keyboard.KEY_K)){
-				if (System.currentTimeMillis() - lastPress > 200){
-					if (colorSky)
-						colorSky = false;
-					else
-						colorSky = true;
-					lastPress = System.currentTimeMillis();
+			/*if (Keyboard.isKeyDown(Keyboard.KEY_F11)){
+				if (System.currentTimeMillis() - lastPress > 500){
+					try {
+						if (Display.isFullscreen())
+							Display.setFullscreen(false);
+						else {
+							Display.setDisplayModeAndFullscreen(Display.getDesktopDisplayMode());
+						}
+					}
+					catch (LWJGLException ex){
+						ex.printStackTrace();
+					}
 				}
 			}*/
+
+			if (Keyboard.isKeyDown(Keyboard.KEY_F3)){
+				if (System.currentTimeMillis() - lastPress > 200){
+					if (debug)
+						debug = false;
+					else
+						debug = true;
+					lastPress = System.currentTimeMillis();
+				}
+			}
 
 			if (Mouse.isButtonDown(1)){
 				if (System.currentTimeMillis() - lastPress > 200){
@@ -385,7 +386,7 @@ public class Footsteps implements ImageObserver {
 			}
 
 			/*if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
-				camera.flyDown(movementSpeed * dt);*/
+				camera.flyDown(movementSpeed * delta);*/
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_L))
 				lightPosition = new Vector3f(camera.position.x * -1, camera.position.y * -1, camera.position.z * -1);
@@ -436,19 +437,21 @@ public class Footsteps implements ImageObserver {
 				camera.velocity.setY(0);
 
 			if (left)
-				camera.strafeLeft(movementSpeed * dt);
+				camera.strafeLeft(movementSpeed * delta / 1000);
 			if (right)
-				camera.strafeRight(movementSpeed * dt);
+				camera.strafeRight(movementSpeed * delta / 1000);
 			if (forward)
-				camera.walkForward(movementSpeed * dt);
+				camera.walkForward(movementSpeed * delta / 1000);
 			if (backward)
-				camera.walkBackward(movementSpeed * dt);
+				camera.walkBackward(movementSpeed * delta / 1000);
 
 			GL11.glLoadIdentity();
 
 			camera.lookThrough();
 
 			GL11.glLight(GL11.GL_LIGHT0, GL11.GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
+
+			Display.sync(60);
 
 			Display.update();
 		}
@@ -486,7 +489,7 @@ public class Footsteps implements ImageObserver {
 
 	@SuppressWarnings("unchecked")
 	private static void setUpFont(){
-		float size = 108.0F;
+		float size = 36F;
 		Font awtFont = new Font("Verdana", Font.BOLD, (int)size);
 		font = new UnicodeFont(awtFont.deriveFont(0, size));
 		font.addAsciiGlyphs();
@@ -501,25 +504,25 @@ public class Footsteps implements ImageObserver {
 		}
 	}
 
-	public void drawString(String str){
-		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, perspectiveProjectionMatrix);
+	public void drawString(int x, int y, String str){
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
-		GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, 1, -1);
-		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, orthographicProjectionMatrix);
-		GL11.glLoadMatrix(perspectiveProjectionMatrix);
-		GL11.glMatrixMode(GL11.GL_MODELVIEW_MATRIX);
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glLoadMatrix(orthographicProjectionMatrix);
+		GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1 );
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glPushMatrix();
+		GL11.glLoadIdentity();
 		GL11.glDisable(GL11.GL_LIGHTING);
-		font.drawString(10, 10, str);
+		if (wireframe)
+			GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+		font.drawString(x, y, str);
+		if (wireframe)
+			GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glPopMatrix();
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glLoadMatrix(perspectiveProjectionMatrix);
+		GL11.glPopMatrix();
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		GL11.glPopMatrix();
 	}
 
 	public BufferedImage scaleImage(BufferedImage img, int width, int height){
@@ -543,5 +546,16 @@ public class Footsteps implements ImageObserver {
 		}
 		buffer.flip();
 		return buffer; 
+	}
+
+	public long getTime() {
+		return (Sys.getTime() * 1000) / Sys.getTimerResolution();
+	}
+
+	public void updateFps(){
+		if (time - lastFps > 400){
+			currentFps = (int)(1000 / delta);
+			lastFps = time;
+		}
 	}
 }

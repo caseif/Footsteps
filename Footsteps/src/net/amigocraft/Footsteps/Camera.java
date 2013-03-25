@@ -40,6 +40,15 @@ public class Camera {
 	public float getZ(){
 		return position.z;
 	}
+	
+	public float getPitch(){
+		return pitch;
+	}
+	
+	public float getYaw(){
+		return yaw;
+	}
+	
 
 	public void setPitch(float amount){
 		pitch += amount;
@@ -47,6 +56,10 @@ public class Camera {
 
 	public void setYaw(float amount){
 		yaw += amount;
+		if (yaw >= 360)
+			yaw -= 360;
+		if (yaw < 0)
+			yaw += 360;
 	}
 
 	public void walkForward(float distance){
