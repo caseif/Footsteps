@@ -121,6 +121,66 @@ public class Camera {
 			}
 		}
 	}
+	
+	public void forwardLeft(float distance){
+		velocity.setX(distance * -(float)Math.sin(Math.toRadians(yaw - 45)));
+		velocity.setZ(distance * (float)Math.cos(Math.toRadians(yaw - 45)));
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
+	}
+	
+	public void forwardRight(float distance){
+		velocity.setX(distance * -(float)Math.sin(Math.toRadians(yaw + 45)));
+		velocity.setZ(distance * (float)Math.cos(Math.toRadians(yaw + 45)));
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
+	}
+	
+	public void backwardLeft(float distance){
+		velocity.setX(distance * (float)Math.sin(Math.toRadians(yaw + 45)));
+		velocity.setZ(distance * -(float)Math.cos(Math.toRadians(yaw + 45)));
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
+	}
+	
+	public void backwardRight(float distance){
+		velocity.setX(distance * (float)Math.sin(Math.toRadians(yaw - 45)));
+		velocity.setZ(distance * -(float)Math.cos(Math.toRadians(yaw - 45)));
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
+	}
 
 	public void flyUp(float distance){
 		velocity.setY(-distance);

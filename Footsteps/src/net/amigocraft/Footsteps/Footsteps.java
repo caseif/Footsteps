@@ -15,7 +15,6 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -452,13 +451,21 @@ public class Footsteps implements ImageObserver {
 				ground = true;
 			}
 
-			if (left)
+			if (forward && left)
+				camera.forwardLeft(movementSpeed * delta / 1000);
+			else if (forward && right)
+				camera.forwardRight(movementSpeed * delta / 1000);
+			else if (backward && left)
+				camera.backwardLeft(movementSpeed * delta / 1000);
+			else if (backward && right)
+				camera.backwardRight(movementSpeed * delta / 1000);
+			else if (left)
 				camera.strafeLeft(movementSpeed * delta / 1000);
-			if (right)
+			else if (right)
 				camera.strafeRight(movementSpeed * delta / 1000);
-			if (forward)
+			else if (forward)
 				camera.walkForward(movementSpeed * delta / 1000);
-			if (backward)
+			else if (backward)
 				camera.walkBackward(movementSpeed * delta / 1000);
 
 			GL11.glLoadIdentity();
