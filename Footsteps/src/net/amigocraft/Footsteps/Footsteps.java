@@ -2,14 +2,17 @@ package net.amigocraft.Footsteps;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.ImageObserver;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,11 +24,8 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
-import org.newdawn.slick.SlickException;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.opengl.Texture;
@@ -91,24 +91,20 @@ public class Footsteps implements ImageObserver {
 			ByteBuffer[] icons = null;
 			if (System.getProperty("os.name").startsWith("Windows")){
 				icons = new ByteBuffer[2];
-				BufferedImage icon1 = ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png"));
-				BufferedImage icon2 = icon1;
-				icon1.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
-				icon1.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
-				icons[0] = ByteBuffer.wrap(((DataBufferByte)icon1.getRaster().getDataBuffer()).getData());
-				icons[1] = ByteBuffer.wrap(((DataBufferByte)icon2.getRaster().getDataBuffer()).getData());
+				BufferedImage icon1 = scaleImage(ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png")), 16, 16);
+				BufferedImage icon2 = scaleImage(ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png")), 32, 32);;
+				icons[0] = asByteBuffer(icon1);
+				icons[1] = asByteBuffer(icon2);
 			}
 			else if (System.getProperty("os.name").startsWith("Mac")){
 				icons = new ByteBuffer[1];
-				BufferedImage icon1 = ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png"));
-				icon1.getScaledInstance(128, 128, Image.SCALE_SMOOTH);
-				icons[0] = ByteBuffer.wrap(((DataBufferByte)icon1.getRaster().getDataBuffer()).getData());
+				BufferedImage icon = scaleImage(ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png")), 128, 128);
+				icons[0] = asByteBuffer(icon);
 			}
 			else {
 				icons = new ByteBuffer[1];
-				BufferedImage icon1 = ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png"));
-				icon1.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
-				icons[0] = ByteBuffer.wrap(((DataBufferByte)icon1.getRaster().getDataBuffer()).getData());
+				BufferedImage icon = scaleImage(ImageIO.read(Footsteps.class.getClassLoader().getResourceAsStream("images/icon.png")), 32, 32);
+				icons[0] = asByteBuffer(icon);
 			}
 			Display.setIcon(icons);
 			Display.create();
@@ -148,7 +144,7 @@ public class Footsteps implements ImageObserver {
 			ex.printStackTrace();
 		}
 
-		//setUpFont();
+		setUpFont();
 
 		Mouse.setGrabbed(true);
 
@@ -201,8 +197,6 @@ public class Footsteps implements ImageObserver {
 			}
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glColor3f(0.3f, 0.3f, 0.3f);
-			if (textured)
-				grassTexture.bind();
 			GL11.glMaterialf(GL11.GL_BACK, GL11.GL_SHININESS, 1f);
 			for (float x = 1; x < hm.getWidth(this); x++){
 				for (float z = 1; z < hm.getHeight(this); z++){
@@ -275,14 +269,14 @@ public class Footsteps implements ImageObserver {
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
-			//drawString("Test");
-			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			drawString("Test");
 
 			if (wireframe)
 				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 			else
 				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
 
+			grassTexture.bind();
 			GL11.glCallList(heightMapListHandle);
 			//GL11.glCallList(bunnyListHandle);
 
@@ -416,8 +410,6 @@ public class Footsteps implements ImageObserver {
 			if (falling && !jumping)
 				camera.flyDown(gravity / percentOf60);
 			else if (jumping){
-				//System.out.println(jumpFrame);
-				//System.out.println(percentOf60);
 				if (jumpFrame < jumpDistance){
 					if (jumpDistance - 1f == jumpFrame)
 						camera.flyUp(jumpSpeed / 2 / percentOf60);
@@ -494,18 +486,18 @@ public class Footsteps implements ImageObserver {
 
 	@SuppressWarnings("unchecked")
 	private static void setUpFont(){
-		Font awtFont = new Font("Verdana", Font.BOLD, 108);
-		font = new UnicodeFont(awtFont);
-		font.getEffects().add(new ColorEffect(Color.RED));
+		float size = 108.0F;
+		Font awtFont = new Font("Verdana", Font.BOLD, (int)size);
+		font = new UnicodeFont(awtFont.deriveFont(0, size));
 		font.addAsciiGlyphs();
+		ColorEffect e = new ColorEffect();
+		e.setColor(Color.RED);
+		font.getEffects().add(e);
 		try {
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
 			font.loadGlyphs();
-			GL11.glEnable(GL11.GL_TEXTURE_2D);
 		}
 		catch (Exception ex){
 			ex.printStackTrace();
-			System.exit(1);
 		}
 	}
 
@@ -523,11 +515,33 @@ public class Footsteps implements ImageObserver {
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
 		font.drawString(10, 10, str);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glEnable(GL11.GL_LIGHTING);
 		GL11.glPopMatrix();
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadMatrix(perspectiveProjectionMatrix);
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+	}
+
+	public BufferedImage scaleImage(BufferedImage img, int width, int height){
+		BufferedImage newImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = (Graphics2D)newImg.getGraphics();
+		g.scale(((double)width / (double)img.getWidth()), ((double)height / (double)img.getHeight()));
+		g.drawImage(img, 0, 0, this);
+		g.dispose();
+		return newImg;
+	}
+
+	public ByteBuffer asByteBuffer(BufferedImage img){
+		ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
+		for(int y = 0; y < img.getHeight(); y++){
+			for(int x = 0; x < img.getWidth(); x++){
+				buffer.put((byte)(new Color(img.getRGB(x, y), true).getRed() & 0xFF));
+				buffer.put((byte)(new Color(img.getRGB(x, y), true).getGreen() & 0xFF));
+				buffer.put((byte)(new Color(img.getRGB(x, y), true).getBlue() & 0xFF));
+				buffer.put((byte)(new Color(img.getRGB(x, y), true).getAlpha() & 0xFF));
+			}
+		}
+		buffer.flip();
+		return buffer; 
 	}
 }
