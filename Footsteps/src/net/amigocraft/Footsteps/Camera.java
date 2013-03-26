@@ -181,6 +181,30 @@ public class Camera {
 			}
 		}
 	}
+	
+	/**
+	 * Moves the camera at a custom angle
+	 * @param angle The angle at which to move on the x and z axes (-90 is left, 90 is right, 0 is straight ahead)
+	 * @param distance The distance to move the camera
+	 * @param backward Whether or not the camera should be moved backwards rather than forwards
+	 */
+	public void moveCustom(int angle, float distance, boolean backward){
+		int zMult = 1;
+		if (backward)
+			zMult = -1;
+		velocity.setX(distance * -(float)Math.sin(Math.toRadians(yaw + (angle * zMult))) * zMult);
+		velocity.setZ(distance * (float)Math.cos(Math.toRadians(yaw + (angle * zMult))) * zMult);
+		for (CollisionBox c : Footsteps.cBoxes){
+			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
+				velocity.setX(0);
+				break;
+			}
+			if (c.contains(new Location(position.getX(), position.getY(), position.getZ() + velocity.getZ()))){
+				velocity.setZ(0);
+				break;
+			}
+		}
+	}
 
 	public void flyUp(float distance){
 		velocity.setY(-distance);

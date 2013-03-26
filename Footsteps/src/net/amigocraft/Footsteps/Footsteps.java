@@ -14,6 +14,8 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import net.java.games.input.Controller;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
@@ -41,6 +43,7 @@ public class Footsteps implements ImageObserver {
 
 	float mouseSensitivity = 0.05f;
 	float movementSpeed = 20.0f;
+	float joystickPovSpeed = 20.0f;
 	float maxPitch = 80;
 	float minPitch = -80;
 	public float jumpFrame = 0;
@@ -54,16 +57,17 @@ public class Footsteps implements ImageObserver {
 	public boolean forward = false;
 	public boolean backward = false;
 	public boolean ground = false;
-	
+
+	public boolean gamepad = false;
 	public boolean smoothing = false;
 	public boolean debug = false;
 	public boolean fullscreen = false;
 
 	public int playerHeight = 10;
-	public float gravity = 0.5f;
-	public float jumpSpeed = 0.5f;
-	public float jumpDistance = 13f;
-	public float jumpFreezeLength = 2f;
+	public float gravity = 2f;
+	public float jumpSpeed = 2f;
+	public float jumpDistance = 2f;
+	public float jumpFreezeLength = 0.8f;
 	public float lastFps = 0f;
 	public float currentTime = 0f;
 	public int currentFps = 0;
@@ -75,6 +79,8 @@ public class Footsteps implements ImageObserver {
 
 	List<Location> terrainCap = new ArrayList<Location>();
 	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
+
+	public Joystick joystick = new Joystick(Controller.Type.STICK, Controller.Type.GAMEPAD);
 
 	public float[] skyColor = new float[]{0f, 0.7f, 0.9f, 1.1f};
 
@@ -138,6 +144,10 @@ public class Footsteps implements ImageObserver {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_ALPHA_TEST);
 		GL11.glAlphaFunc(GL11.GL_GREATER, 0);
+
+		if (joystick.isControllerConnected())
+			System.out.println("Gamepad \"" + joystick.getControllerName() + "\" found");
+
 
 		if (colorSky)
 			GL11.glClearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3]);
@@ -272,7 +282,34 @@ public class Footsteps implements ImageObserver {
 		GL11.glEndList();
 
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
+			
+			boolean movedByGamepad = false;
+
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+
+			if (gamepad){
+				if (!joystick.pollController())
+					gamepad = false;
+			}
+
+			if (gamepad){
+				int leftStickX = joystick.getX_LeftJoystick_Percentage() - 50;
+				int leftStickY = joystick.getY_LeftJoystick_Percentage() - 50;
+				int rightStickX = joystick.getX_RightJoystick_Percentage() - 50;
+				int rightStickY = joystick.getY_RightJoystick_Percentage() - 50;
+
+				if (leftStickX != 0 && leftStickY != 0){
+					boolean backward = false;
+					if (leftStickY > 0)
+						backward = true;
+					int angle = leftStickX * 2 / 100 * 90;
+					camera.moveCustom(angle, movementSpeed * delta / 1000, backward);
+					movedByGamepad = true;
+				}
+
+				camera.yaw += (rightStickX / 100) * joystickPovSpeed * delta / 1000;
+				camera.pitch += (rightStickY / 100) * joystickPovSpeed * delta / 1000;
+			}
 
 			if (wireframe)
 				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
@@ -307,32 +344,34 @@ public class Footsteps implements ImageObserver {
 			if (camera.pitch + (dy * mouseSensitivity) < maxPitch && camera.pitch + (dy * mouseSensitivity) > minPitch)
 				camera.setPitch(dy * mouseSensitivity);
 
-			if (Keyboard.isKeyDown(Keyboard.KEY_W))
-				forward = true;
-			else if (forward){
-				camera.walkForward(0);
-				forward = false;
-			}
+			if (!movedByGamepad){
+				if (Keyboard.isKeyDown(Keyboard.KEY_W))
+					forward = true;
+				else if (forward){
+					camera.walkForward(0);
+					forward = false;
+				}
 
-			if (Keyboard.isKeyDown(Keyboard.KEY_S))
-				backward = true;
-			else if (backward){
-				camera.walkBackward(0);
-				backward = false;
-			}
+				if (Keyboard.isKeyDown(Keyboard.KEY_S))
+					backward = true;
+				else if (backward){
+					camera.walkBackward(0);
+					backward = false;
+				}
 
-			if (Keyboard.isKeyDown(Keyboard.KEY_A))
-				left = true;
-			else if (left){
-				camera.strafeLeft(0);
-				left = false;
-			}
+				if (Keyboard.isKeyDown(Keyboard.KEY_A))
+					left = true;
+				else if (left){
+					camera.strafeLeft(0);
+					left = false;
+				}
 
-			if (Keyboard.isKeyDown(Keyboard.KEY_D))
-				right = true;
-			else if (right){
-				camera.strafeRight(0);
-				right = false;
+				if (Keyboard.isKeyDown(Keyboard.KEY_D))
+					right = true;
+				else if (right){
+					camera.strafeRight(0);
+					right = false;
+				}
 			}
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)){
@@ -350,7 +389,7 @@ public class Footsteps implements ImageObserver {
 						wireframe = true;
 					lastPress = System.currentTimeMillis();
 				}
-			}
+			}			
 
 			/*if (Keyboard.isKeyDown(Keyboard.KEY_F11)){
 				if (System.currentTimeMillis() - lastPress > 500){
@@ -411,7 +450,7 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 			if (falling && !jumping){
-				camera.flyDown(gravity / percentOf60);
+				camera.flyDown(gravity * delta / 100);
 				/*for (Location l : terrainCap){
 					if (l.xZEquals(new Location((int)camera.position.x * -1, (int)camera.position.y * -1, (int)camera.position.z * -1))){
 						if (l.getY() - camera.getY() > 10){
@@ -426,18 +465,19 @@ public class Footsteps implements ImageObserver {
 				ground = false;
 				if (jumpFrame < jumpDistance){
 					if (jumpDistance - 1f == jumpFrame)
-						camera.flyUp(jumpSpeed / 2 / percentOf60);
+						camera.flyUp(jumpSpeed / 2 * delta / 100);
 					else
-						camera.flyUp(jumpSpeed / percentOf60);
-					jumpFrame += percentOf60;
+						camera.flyUp(jumpSpeed * delta / 100);
+					jumpFrame += delta / 100;
 				}
 				else if (jumpFreezeFrame < jumpFreezeLength){
-					jumpFrame += percentOf60;
-					jumpFreezeFrame += percentOf60;
+					camera.velocity.setY(0);
+					jumpFrame += delta / 100;
+					jumpFreezeFrame += delta / 100;
 				}
 				else if (jumpFreezeFrame == jumpFreezeLength){
-					camera.flyDown(gravity / 2 / percentOf60);
-					jumpFreezeFrame += percentOf60;
+					camera.flyDown(gravity / 2 * delta / 100);
+					jumpFreezeFrame += delta / 100;
 				}
 				else {
 					jumping = false;
@@ -451,22 +491,24 @@ public class Footsteps implements ImageObserver {
 				ground = true;
 			}
 
-			if (forward && left)
-				camera.forwardLeft(movementSpeed * delta / 1000);
-			else if (forward && right)
-				camera.forwardRight(movementSpeed * delta / 1000);
-			else if (backward && left)
-				camera.backwardLeft(movementSpeed * delta / 1000);
-			else if (backward && right)
-				camera.backwardRight(movementSpeed * delta / 1000);
-			else if (left)
-				camera.strafeLeft(movementSpeed * delta / 1000);
-			else if (right)
-				camera.strafeRight(movementSpeed * delta / 1000);
-			else if (forward)
-				camera.walkForward(movementSpeed * delta / 1000);
-			else if (backward)
-				camera.walkBackward(movementSpeed * delta / 1000);
+			if (!movedByGamepad){
+				if (forward && left)
+					camera.forwardLeft(movementSpeed * delta / 1000);
+				else if (forward && right)
+					camera.forwardRight(movementSpeed * delta / 1000);
+				else if (backward && left)
+					camera.backwardLeft(movementSpeed * delta / 1000);
+				else if (backward && right)
+					camera.backwardRight(movementSpeed * delta / 1000);
+				else if (left)
+					camera.strafeLeft(movementSpeed * delta / 1000);
+				else if (right)
+					camera.strafeRight(movementSpeed * delta / 1000);
+				else if (forward)
+					camera.walkForward(movementSpeed * delta / 1000);
+				else if (backward)
+					camera.walkBackward(movementSpeed * delta / 1000);
+			}
 
 			GL11.glLoadIdentity();
 
