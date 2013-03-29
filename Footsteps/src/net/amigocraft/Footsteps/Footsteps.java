@@ -336,6 +336,28 @@ public class Footsteps {
 				float start = joystick.getComponentValue(Identifier.Button._7);
 				if (start > 0)
 					break;
+				
+				float select = joystick.getComponentValue(Identifier.Button._6);
+				if (select > 0){
+					if (System.currentTimeMillis() - lastPress > 200){
+						if (debug)
+							debug = false;
+						else
+							debug = true;
+						lastPress = System.currentTimeMillis();
+					}
+				}
+				
+				float xButton = joystick.getComponentValue(Identifier.Button._2);
+				if (xButton > 0){
+					if (System.currentTimeMillis() - lastPress > 200){
+						if (wireframe)
+							wireframe = false;
+						else
+							wireframe = true;
+						lastPress = System.currentTimeMillis();
+					}
+				}
 			}
 
 			if (wireframe)
