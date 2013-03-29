@@ -31,6 +31,13 @@ import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
+/**
+ * @title Footsteps
+ * @author The Unknown Team
+ * 
+ * All Rights Reserved to The Unknown Team
+ *
+ */
 public class Footsteps implements ImageObserver {
 
 	Camera camera = new Camera(250, 50, 150);
