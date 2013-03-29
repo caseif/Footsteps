@@ -468,7 +468,6 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 			if (falling && !jumping){
-				System.out.println(fallFrame + ": " + (fallFrame / fallIncrease * gravity) * delta / 100f);
 				camera.flyDown((fallFrame / fallIncrease * gravity) * delta / 100f);
 				if (fallFrame < fallIncrease)
 					fallFrame += 1;
