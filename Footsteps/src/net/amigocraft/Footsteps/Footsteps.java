@@ -48,6 +48,7 @@ public class Footsteps implements ImageObserver {
 	public float jumpFrame = 0;
 	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
+	public float fallFrame = 0f;
 
 	public static boolean jumping = false;
 	public boolean falling = true;
@@ -66,7 +67,7 @@ public class Footsteps implements ImageObserver {
 	public float gravity = 2f;
 	public float jumpSpeed = 2f;
 	public float jumpDistance = 2f;
-	public float jumpFreezeLength = 0.8f;
+	public float fallIncrease = 15f;
 	public float lastFps = 0f;
 	public float currentTime = 0f;
 	public int currentFps = 0;
@@ -467,7 +468,10 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 			if (falling && !jumping){
-				camera.flyDown(gravity * delta / 100);
+				System.out.println(fallFrame + ": " + (fallFrame / fallIncrease * gravity) * delta / 100f);
+				camera.flyDown((fallFrame / fallIncrease * gravity) * delta / 100f);
+				if (fallFrame < fallIncrease)
+					fallFrame += 1;
 				/*for (Location l : terrainCap){
 					if (l.xZEquals(new Location((int)camera.position.x * -1, (int)camera.position.y * -1, (int)camera.position.z * -1))){
 						if (l.getY() - camera.getY() > 10){
@@ -479,22 +483,11 @@ public class Footsteps implements ImageObserver {
 				}*/
 			}
 			else if (jumping){
+				fallFrame = 0f;
 				ground = false;
 				if (jumpFrame < jumpDistance){
-					if (jumpDistance - 1f == jumpFrame)
-						camera.flyUp(jumpSpeed / 2 * delta / 100);
-					else
-						camera.flyUp(jumpSpeed * delta / 100);
+					camera.flyUp((jumpSpeed - (jumpFrame / jumpDistance)) * delta / 100f);
 					jumpFrame += delta / 100;
-				}
-				else if (jumpFreezeFrame < jumpFreezeLength){
-					camera.velocity.setY(0);
-					jumpFrame += delta / 100;
-					jumpFreezeFrame += delta / 100;
-				}
-				else if (jumpFreezeFrame == jumpFreezeLength){
-					camera.flyDown(gravity / 2 * delta / 100);
-					jumpFreezeFrame += delta / 100;
 				}
 				else {
 					jumping = false;
@@ -504,12 +497,9 @@ public class Footsteps implements ImageObserver {
 				}
 			}
 			else {
+				fallFrame = 0f;
 				camera.velocity.setY(0);
 				ground = true;
-				//TODO: Add rumbler support
-				/*if (gamepad){
-					System.out.println(joystick.getController().getRumblers().length);
-				}*/
 			}
 
 			if (!movedByGamepad){
