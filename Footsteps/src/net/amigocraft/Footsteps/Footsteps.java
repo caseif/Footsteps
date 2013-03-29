@@ -15,6 +15,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import net.java.games.input.Controller;
+import net.java.games.input.Component.Identifier;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
@@ -36,16 +37,14 @@ public class Footsteps implements ImageObserver {
 	float dx = 0.0f;
 	float dy = 0.0f;
 	float delta = 0;
-	long lastTime = 0;
+	long lastTime = getTime();
 	long time = getTime();
 	static Vector3f lightPosition = new Vector3f(-500f, -500f, 1000f);
 	long lastPress = (int)System.currentTimeMillis();
 
 	float mouseSensitivity = 0.05f;
 	float movementSpeed = 20.0f;
-	float joystickPovSpeed = 20.0f;
-	float maxPitch = 80;
-	float minPitch = -80;
+	float joystickPovSpeed = 100.0f;
 	public float jumpFrame = 0;
 	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
@@ -145,8 +144,10 @@ public class Footsteps implements ImageObserver {
 		GL11.glEnable(GL11.GL_ALPHA_TEST);
 		GL11.glAlphaFunc(GL11.GL_GREATER, 0);
 
-		if (joystick.isControllerConnected())
+		if (joystick.isControllerConnected()){
 			System.out.println("Gamepad \"" + joystick.getControllerName() + "\" found");
+			gamepad = true;
+		}
 
 
 		if (colorSky)
@@ -283,6 +284,10 @@ public class Footsteps implements ImageObserver {
 
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 			
+			time = getTime();
+			delta = time - lastTime;
+			lastTime = time;
+
 			boolean movedByGamepad = false;
 
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
@@ -292,23 +297,39 @@ public class Footsteps implements ImageObserver {
 					gamepad = false;
 			}
 
-			if (gamepad){
-				int leftStickX = joystick.getX_LeftJoystick_Percentage() - 50;
-				int leftStickY = joystick.getY_LeftJoystick_Percentage() - 50;
-				int rightStickX = joystick.getX_RightJoystick_Percentage() - 50;
-				int rightStickY = joystick.getY_RightJoystick_Percentage() - 50;
-
-				if (leftStickX != 0 && leftStickY != 0){
+			if (gamepad){				
+				float leftStickX = (joystick.getX_LeftJoystick_Percentage() - 50) / 50f;
+				float leftStickY = (joystick.getY_LeftJoystick_Percentage() - 50) / 50f;
+				float rightStickX = (joystick.getX_RightJoystick_Percentage() - 50) / 50f;
+				float rightStickY = (joystick.getY_RightJoystick_Percentage() - 50) / 50f;
+				
+				if (leftStickX > .04 || leftStickX < -.04 || leftStickY > .04 || leftStickY < -.04){
 					boolean backward = false;
 					if (leftStickY > 0)
 						backward = true;
-					int angle = leftStickX * 2 / 100 * 90;
-					camera.moveCustom(angle, movementSpeed * delta / 1000, backward);
+					int angle = Math.round(leftStickX * 90);
+					float larger = Math.abs(leftStickX);
+					if (Math.abs(leftStickY) > Math.abs(leftStickX))
+						larger = Math.abs(leftStickY);
+					if (movementSpeed * delta / 1000 < 50) // just in case
+						camera.moveCustom(angle, movementSpeed * larger * delta / 1000, backward);
 					movedByGamepad = true;
 				}
+				else
+					camera.freezeXAndZ();
 
-				camera.yaw += (rightStickX / 100) * joystickPovSpeed * delta / 1000;
-				camera.pitch += (rightStickY / 100) * joystickPovSpeed * delta / 1000;
+				if (rightStickX > .04 || rightStickX < -.04 || rightStickY > .04 || rightStickY < -.04){
+					camera.addYaw(rightStickX * joystickPovSpeed * delta / 1000);
+					camera.addPitch(rightStickY * joystickPovSpeed * delta / 1000);
+				}
+				
+				float x = joystick.getComponentValue(Identifier.Button._0);
+				if (x > 0 && !jumping)
+					jumping = true;
+
+				float start = joystick.getComponentValue(Identifier.Button._7);
+				if (start > 0)
+					break;
 			}
 
 			if (wireframe)
@@ -319,11 +340,6 @@ public class Footsteps implements ImageObserver {
 			grassTexture.bind();
 			GL11.glCallList(heightMapListHandle);
 			//GL11.glCallList(bunnyListHandle);
-
-			time = getTime();
-			delta = time - lastTime;
-			float percentOf60 = (1000 / delta) / 60;
-			lastTime = time;
 
 			dx = Mouse.getDX();
 			dy = Mouse.getDY() * -1;
@@ -339,10 +355,8 @@ public class Footsteps implements ImageObserver {
 				//drawString(10, 220, "ground: " + ground);
 			}
 
-			camera.setYaw(dx * mouseSensitivity);
-
-			if (camera.pitch + (dy * mouseSensitivity) < maxPitch && camera.pitch + (dy * mouseSensitivity) > minPitch)
-				camera.setPitch(dy * mouseSensitivity);
+			camera.addYaw(dx * mouseSensitivity);
+			camera.addPitch(dy * mouseSensitivity);
 
 			if (!movedByGamepad){
 				if (Keyboard.isKeyDown(Keyboard.KEY_W))
@@ -489,6 +503,10 @@ public class Footsteps implements ImageObserver {
 			else {
 				camera.velocity.setY(0);
 				ground = true;
+				//TODO: Add rumbler support
+				/*if (gamepad){
+					System.out.println(joystick.getController().getRumblers().length);
+				}*/
 			}
 
 			if (!movedByGamepad){

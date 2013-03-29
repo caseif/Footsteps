@@ -51,14 +51,36 @@ public class Camera {
 	
 
 	public void setPitch(float amount){
-		pitch += amount;
+		if (amount > 80)
+			pitch = 80;
+		else if (amount < -80)
+			pitch = -80;
+		else
+			pitch = amount;
 	}
 
 	public void setYaw(float amount){
-		yaw += amount;
-		if (yaw >= 360)
+		yaw = amount;
+		if (yaw >= 180)
 			yaw -= 360;
-		if (yaw < 0)
+		if (yaw < -180)
+			yaw += 360;
+	}
+	
+	public void addPitch(float amount){
+		if (pitch + amount > 80)
+			pitch = 80;
+		else if (pitch + amount < -80)
+			pitch = -80;
+		else
+			pitch += amount;
+	}
+	
+	public void addYaw(float amount){
+		yaw += amount;
+		if (yaw >= 180)
+			yaw -= 360;
+		if (yaw < -180)
 			yaw += 360;
 	}
 
@@ -192,8 +214,8 @@ public class Camera {
 		int zMult = 1;
 		if (backward)
 			zMult = -1;
-		velocity.setX(distance * -(float)Math.sin(Math.toRadians(yaw + (angle * zMult))) * zMult);
-		velocity.setZ(distance * (float)Math.cos(Math.toRadians(yaw + (angle * zMult))) * zMult);
+		velocity.setX(distance * (-(float)Math.sin(Math.toRadians(yaw + (angle * zMult))) * zMult));
+		velocity.setZ(distance * ((float)Math.cos(Math.toRadians(yaw + (angle * zMult))) * zMult));
 		for (CollisionBox c : Footsteps.cBoxes){
 			if (c.contains(new Location(position.getX() + velocity.getX(), position.getY(), position.getZ()))){
 				velocity.setX(0);
@@ -238,6 +260,11 @@ public class Camera {
 	
 	public void freeze(){
 		velocity.set(0, 0, 0);
+	}
+	
+	public void freezeXAndZ(){
+		velocity.setX(0);
+		velocity.setZ(0);
 	}
 
 	public void lookThrough(){
