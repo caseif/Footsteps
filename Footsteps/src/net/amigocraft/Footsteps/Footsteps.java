@@ -329,8 +329,8 @@ public class Footsteps {
 					camera.addPitch(rightStickY * joystickPovSpeed * delta / 1000);
 				}
 				
-				float x = joystick.getComponentValue(Identifier.Button._0);
-				if (x > 0 && !jumping)
+				float a = joystick.getComponentValue(Identifier.Button._0);
+				if (a > 0 && !jumping && !falling)
 					jumping = true;
 
 				float start = joystick.getComponentValue(Identifier.Button._7);
@@ -348,8 +348,8 @@ public class Footsteps {
 					}
 				}
 				
-				float xButton = joystick.getComponentValue(Identifier.Button._2);
-				if (xButton > 0){
+				float x = joystick.getComponentValue(Identifier.Button._2);
+				if (x > 0){
 					if (System.currentTimeMillis() - lastPress > 200){
 						if (wireframe)
 							wireframe = false;
