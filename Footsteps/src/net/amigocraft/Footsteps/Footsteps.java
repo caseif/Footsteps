@@ -3,9 +3,7 @@ package net.amigocraft.Footsteps;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -38,7 +36,7 @@ import org.newdawn.slick.opengl.TextureLoader;
  * All Rights Reserved to The Unknown Team
  *
  */
-public class Footsteps implements ImageObserver {
+public class Footsteps {
 
 	Camera camera = new Camera(250, 50, 150);
 	float dx = 0.0f;
@@ -222,9 +220,9 @@ public class Footsteps implements ImageObserver {
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glColor3f(0.3f, 0.3f, 0.3f);
 			GL11.glMaterialf(GL11.GL_BACK, GL11.GL_SHININESS, 1f);
-			for (float x = 1; x < hm.getWidth(this); x++){
-				for (float z = 1; z < hm.getHeight(this); z++){
-					if (x < hm.getWidth(this) && z < hm.getHeight(this)){
+			for (float x = 1; x < hm.getWidth(null); x++){
+				for (float z = 1; z < hm.getHeight(null); z++){
+					if (x < hm.getWidth(null) && z < hm.getHeight(null)){
 						float yDivide = 5;
 
 						// y1
@@ -235,7 +233,7 @@ public class Footsteps implements ImageObserver {
 						int blue1 = color1.getBlue();
 						int shade1 = (red1 + green1 + blue1) / 3;
 						float y1 = shade1 / yDivide;
-						float pixel1 = (y1 * yDivide / 256) * hmRef.getWidth(this);
+						float pixel1 = (y1 * yDivide / 256) * hmRef.getWidth(null);
 						Color c1 = new Color(hmRef.getRGB((int)pixel1, 0));
 						float newRed1 = c1.getRed();
 						float newGreen1 = c1.getGreen();
@@ -363,7 +361,7 @@ public class Footsteps implements ImageObserver {
 				drawString(10, 220, "gamepad: " + gamepad);
 				int mb = 1024 * 1024;
 				Runtime runtime = Runtime.getRuntime();
-				drawString(10, 255, runtime.maxMemory() / mb + "mb total memory: " + (runtime.maxMemory() - runtime.freeMemory()) / mb + "mb used, " + runtime.freeMemory() / mb + "mb free");
+				drawString(10, 255, runtime.maxMemory() / mb + "mb allocated memory: " + (runtime.maxMemory() - runtime.freeMemory()) / mb + "mb used, " + runtime.freeMemory() / mb + "mb free");
 			}
 
 			camera.addYaw(dx * mouseSensitivity);
@@ -547,12 +545,6 @@ public class Footsteps implements ImageObserver {
 		return buffer;
 	}
 
-	@Override
-	public boolean imageUpdate(Image arg0, int arg1, int arg2, int arg3,
-			int arg4, int arg5){
-		return false;
-	}
-
 	public void moveCameraSmooth(Location oldLoc, Location newLoc, int stages){
 		float xDiff = newLoc.getX() - oldLoc.getX();
 		float yDiff = newLoc.getY() - oldLoc.getY();
@@ -611,7 +603,7 @@ public class Footsteps implements ImageObserver {
 		BufferedImage newImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = (Graphics2D)newImg.getGraphics();
 		g.scale(((double)width / (double)img.getWidth()), ((double)height / (double)img.getHeight()));
-		g.drawImage(img, 0, 0, this);
+		g.drawImage(img, 0, 0, null);
 		g.dispose();
 		return newImg;
 	}
