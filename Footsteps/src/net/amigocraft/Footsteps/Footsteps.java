@@ -352,7 +352,10 @@ public class Footsteps implements ImageObserver {
 				drawString(10, 115, "z: " + camera.getZ());
 				drawString(10, 150, "pitch: " + camera.getPitch());
 				drawString(10, 185, "yaw: " + camera.getYaw());
-				//drawString(10, 220, "ground: " + ground);
+				drawString(10, 220, "gamepad: " + gamepad);
+				int mb = 1024 * 1024;
+				Runtime runtime = Runtime.getRuntime();
+				drawString(10, 255, runtime.maxMemory() / mb + "mb total memory: " + (runtime.maxMemory() - runtime.freeMemory()) / mb + "mb used, " + runtime.freeMemory() / mb + "mb free");
 			}
 
 			camera.addYaw(dx * mouseSensitivity);
@@ -572,7 +575,7 @@ public class Footsteps implements ImageObserver {
 
 	@SuppressWarnings("unchecked")
 	private static void setUpFont(){
-		float size = 36F;
+		float size = 28F;
 		Font awtFont = new Font("Verdana", Font.BOLD, (int)size);
 		font = new UnicodeFont(awtFont.deriveFont(0, size));
 		font.addAsciiGlyphs();
