@@ -3,6 +3,8 @@ package net.amigocraft.Footsteps;
 import java.util.ArrayList;
 import net.java.games.input.Component;
 import net.java.games.input.Component.Identifier;
+import net.java.games.input.Component.Identifier.Axis;
+import net.java.games.input.Component.Identifier.Button;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 
@@ -95,7 +97,10 @@ public class Joystick {
 	public boolean isControllerConnected()
 	{
 		try {
-			return controller.poll();
+			Identifier identifier = Component.Identifier.Axis.RX;
+			if (controller.getComponent(identifier) != null)
+				return true;
+			return false;
 		} catch (Exception e) {
 			return false;
 		}
