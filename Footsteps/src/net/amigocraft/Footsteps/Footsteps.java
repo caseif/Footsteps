@@ -303,7 +303,7 @@ public class Footsteps {
 					gamepad = false;
 			}
 
-			if (gamepad){				
+			if (gamepad){
 				float leftStickX = (joystick.getX_LeftJoystick_Percentage() - 50) / 50f;
 				float leftStickY = (joystick.getY_LeftJoystick_Percentage() - 50) / 50f;
 				float rightStickX = (joystick.getX_RightJoystick_Percentage() - 50) / 50f;
