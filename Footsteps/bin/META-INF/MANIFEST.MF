@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Class-Path: . slick.jar lwjgl_util.jar jinput.jar lwjgl.jar
+Main-Class: net.amigocraft.Footsteps.Footsteps

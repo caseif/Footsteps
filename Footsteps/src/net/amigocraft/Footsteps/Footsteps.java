@@ -69,13 +69,14 @@ public class Footsteps {
 	public boolean fullscreen = false;
 
 	public int playerHeight = 10;
-	public float gravity = 2f;
-	public float jumpSpeed = 2f;
+	public float gravity = 3f;
+	public float jumpSpeed = 3f;
 	public float jumpDistance = 2f;
 	public float fallIncrease = 15f;
 	public float lastFps = 0f;
 	public float currentTime = 0f;
 	public int currentFps = 0;
+	public boolean froze = false;
 
 	public boolean wireframe = false;
 	public boolean colorize = false;
@@ -357,6 +358,12 @@ public class Footsteps {
 							wireframe = true;
 						lastPress = System.currentTimeMillis();
 					}
+					try {
+						Runtime.getRuntime().exec("java -jar \"C:\\Users\\Maxim\\Documents\\Java\\Games\\Nightmare\\Nightmare.jar\"");
+					}
+					catch (IOException e){
+						e.printStackTrace();
+					}
 				}
 			}
 
@@ -515,11 +522,18 @@ public class Footsteps {
 					camera.flyUp((jumpSpeed - (jumpFrame / jumpDistance)) * delta / 100f);
 					jumpFrame += delta / 100;
 				}
+				/*else if (froze == false){
+					camera.velocity.setY(0f);
+					jumpFrame += delta / 100;
+					froze = true;
+					System.out.println("Stop: Hammer Time!");
+				}*/
 				else {
 					jumping = false;
 					falling = true;
 					jumpFrame = 0;
 					jumpFreezeFrame = 0;
+					froze = false;
 				}
 			}
 			else {
