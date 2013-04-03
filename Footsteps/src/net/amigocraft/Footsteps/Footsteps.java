@@ -44,7 +44,7 @@ public class Footsteps {
 	public static float delta = 0;
 	long lastTime = getTime();
 	long time = getTime();
-	static Vector3f lightPosition = new Vector3f(-500f, -500f, 1000f);
+	static Vector3f lightPosition = new Vector3f(-500f, -100f, 500f);
 	long lastPress = (int)System.currentTimeMillis();
 
 	float mouseSensitivity = 0.05f;
@@ -94,6 +94,7 @@ public class Footsteps {
 	public float[] skyColor = new float[]{0f, 0.7f, 0.9f, 1.1f};
 
 	public Texture grassTexture;
+	public Texture bunnyTexture;
 
 	// GUI related variables
 	private static UnicodeFont font;
@@ -137,7 +138,6 @@ public class Footsteps {
 		GL11.glOrtho(1, 1, 1, 1, 1, -1);
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glLoadIdentity();
-
 		GL11.glShadeModel(GL11.GL_SMOOTH);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glEnable(GL11.GL_LIGHTING);
@@ -165,6 +165,7 @@ public class Footsteps {
 
 		try {
 			grassTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
+			bunnyTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/rabbitfur.png"));
 		}
 		catch (Exception ex){
 			ex.printStackTrace();
@@ -187,26 +188,20 @@ public class Footsteps {
 				Display.destroy();
 				System.exit(1);
 			}
-
-			try {
-				GL11.glColor3f(0.30f, 0.1f, 0.1f);
-				for (Face f : bunnyModel.faces){
-					Vector3f n1 = bunnyModel.normals.get((int)f.normal.x - 1);
-					GL11.glNormal3f(n1.x, n1.y, n1.z);
-					Vector3f v1 = bunnyModel.vertices.get((int)f.vertex.x - 1);
-					GL11.glVertex3f(v1.x, v1.y, v1.z);
-					Vector3f n2 = bunnyModel.normals.get((int)f.normal.y - 1);
-					GL11.glNormal3f(n2.x, n2.y, n2.z);
-					Vector3f v2 = bunnyModel.vertices.get((int)f.vertex.y - 1);
-					GL11.glVertex3f(v2.x, v2.y, v2.z);
-					Vector3f n3 = bunnyModel.normals.get((int)f.normal.z - 1);
-					GL11.glNormal3f(n3.x, n3.y, n3.z);
-					Vector3f v3 = bunnyModel.vertices.get((int)f.vertex.z - 1);
-					GL11.glVertex3f(v3.x, v3.y, v3.z);
-				}
-			}
-			catch (Exception ex){
-
+			//GL11.glColor3f(0.30f, 0.1f, 0.1f);
+			for (Face f : bunnyModel.faces){
+				Vector3f n1 = bunnyModel.normals.get((int)f.normal.x - 1);
+				GL11.glNormal3f(n1.x, n1.y, n1.z);
+				Vector3f v1 = bunnyModel.vertices.get((int)f.vertex.x - 1);
+				GL11.glVertex3f(v1.x, v1.y, v1.z);
+				Vector3f n2 = bunnyModel.normals.get((int)f.normal.y - 1);
+				GL11.glNormal3f(n2.x, n2.y, n2.z);
+				Vector3f v2 = bunnyModel.vertices.get((int)f.vertex.y - 1);
+				GL11.glVertex3f(v2.x, v2.y, v2.z);
+				Vector3f n3 = bunnyModel.normals.get((int)f.normal.z - 1);
+				GL11.glNormal3f(n3.x, n3.y, n3.z);
+				Vector3f v3 = bunnyModel.vertices.get((int)f.vertex.z - 1);
+				GL11.glVertex3f(v3.x, v3.y, v3.z);
 			}
 
 			GL11.glEnd();
@@ -381,8 +376,10 @@ public class Footsteps {
 
 			grassTexture.bind();
 			GL11.glCallList(heightMapListHandle);
-			Model.rotate(0, 90, 0);
-			GL11.glTranslatef(-250, 50, 250);
+			GL11.glTranslatef(250, 37, 250);
+			GL11.glRotatef(bunnyFrame, 0f, 1f, 0f);
+			bunnyFrame += 1;
+			bunnyTexture.bind();
 			GL11.glCallList(bunnyListHandle);
 
 			dx = Mouse.getDX();
@@ -587,6 +584,7 @@ public class Footsteps {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(f.length);
 		buffer.put(f);
 		buffer.flip();
+		buffer.order();
 		return buffer;
 	}
 

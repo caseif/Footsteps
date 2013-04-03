@@ -3,7 +3,6 @@ package net.amigocraft.Footsteps;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
 public class Model {
@@ -21,12 +20,6 @@ public class Model {
 		for (Face f : faces)
 			m.faces.add(f);
 		return m;
-	}
-	
-	public static void rotate(float x, float y, float z){
-		GL11.glRotatef(x, 1f, 0f, 0f);
-		GL11.glRotatef(y, 0f, 1f, 0f);
-		GL11.glRotatef(z, 0f, 0f, 1f);
 	}
 	
 	public boolean contains(Location l){
