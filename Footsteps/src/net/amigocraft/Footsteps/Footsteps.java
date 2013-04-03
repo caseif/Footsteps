@@ -41,7 +41,7 @@ public class Footsteps {
 	Camera camera = new Camera(250, 50, 150);
 	float dx = 0.0f;
 	float dy = 0.0f;
-	float delta = 0;
+	public static float delta = 0;
 	long lastTime = getTime();
 	long time = getTime();
 	static Vector3f lightPosition = new Vector3f(-500f, -500f, 1000f);
@@ -54,6 +54,7 @@ public class Footsteps {
 	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
 	public float fallFrame = 0f;
+	public int bunnyFrame = 0;
 
 	public static boolean jumping = false;
 	public boolean falling = true;
@@ -82,6 +83,8 @@ public class Footsteps {
 	public boolean colorize = false;
 	public boolean textured = true;
 	public boolean colorSky = true;
+
+	public static Model bunnyModel;
 
 	List<Location> terrainCap = new ArrayList<Location>();
 	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
@@ -172,13 +175,12 @@ public class Footsteps {
 		Mouse.setGrabbed(true);
 
 		// this code is here as a reference for future models
-		/*int bunnyListHandle = GL11.glGenLists(1);
+		int bunnyListHandle = GL11.glGenLists(1);
 		GL11.glNewList(bunnyListHandle, GL11.GL_COMPILE);
 		{
 			GL11.glBegin(GL11.GL_TRIANGLES);
-			Model m = null;
 			try {
-				m = ObjLoader.loadModel(this.getClass().getClassLoader().getResourceAsStream("models/bunny.obj"));
+				bunnyModel = ObjLoader.loadModel(this.getClass().getClassLoader().getResourceAsStream("models/bunny.obj"));
 			}
 			catch (Exception ex){
 				ex.printStackTrace();
@@ -186,25 +188,30 @@ public class Footsteps {
 				System.exit(1);
 			}
 
-			GL11.glColor3f(0.35f, 0.2f, 0.1f);
-			for (Face f : m.faces){
-				Vector3f n1 = m.normals.get((int)f.normal.x - 1);
-				GL11.glNormal3f(n1.x, n1.y, n1.z);
-				Vector3f v1 = m.vertices.get((int)f.vertex.x - 1);
-				GL11.glVertex3f(v1.x, v1.y, v1.z);
-				Vector3f n2 = m.normals.get((int)f.normal.y - 1);
-				GL11.glNormal3f(n2.x, n2.y, n2.z);
-				Vector3f v2 = m.vertices.get((int)f.vertex.y - 1);
-				GL11.glVertex3f(v2.x, v2.y, v2.z);
-				Vector3f n3 = m.normals.get((int)f.normal.z - 1);
-				GL11.glNormal3f(n3.x, n3.y, n3.z);
-				Vector3f v3 = m.vertices.get((int)f.vertex.z - 1);
-				GL11.glVertex3f(v3.x, v3.y, v3.z);
+			try {
+				GL11.glColor3f(0.30f, 0.1f, 0.1f);
+				for (Face f : bunnyModel.faces){
+					Vector3f n1 = bunnyModel.normals.get((int)f.normal.x - 1);
+					GL11.glNormal3f(n1.x, n1.y, n1.z);
+					Vector3f v1 = bunnyModel.vertices.get((int)f.vertex.x - 1);
+					GL11.glVertex3f(v1.x, v1.y, v1.z);
+					Vector3f n2 = bunnyModel.normals.get((int)f.normal.y - 1);
+					GL11.glNormal3f(n2.x, n2.y, n2.z);
+					Vector3f v2 = bunnyModel.vertices.get((int)f.vertex.y - 1);
+					GL11.glVertex3f(v2.x, v2.y, v2.z);
+					Vector3f n3 = bunnyModel.normals.get((int)f.normal.z - 1);
+					GL11.glNormal3f(n3.x, n3.y, n3.z);
+					Vector3f v3 = bunnyModel.vertices.get((int)f.vertex.z - 1);
+					GL11.glVertex3f(v3.x, v3.y, v3.z);
+				}
+			}
+			catch (Exception ex){
+
 			}
 
 			GL11.glEnd();
 		}
-		GL11.glEndList();*/
+		GL11.glEndList();
 
 		int heightMapListHandle = GL11.glGenLists(1);
 		GL11.glNewList(heightMapListHandle, GL11.GL_COMPILE);
@@ -290,7 +297,7 @@ public class Footsteps {
 		GL11.glEndList();
 
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
-			
+
 			time = getTime();
 			delta = time - lastTime;
 			lastTime = time;
@@ -309,7 +316,7 @@ public class Footsteps {
 				float leftStickY = (joystick.getY_LeftJoystick_Percentage() - 50) / 50f;
 				float rightStickX = (joystick.getX_RightJoystick_Percentage() - 50) / 50f;
 				float rightStickY = (joystick.getY_RightJoystick_Percentage() - 50) / 50f;
-				
+
 				if (leftStickX > .04 || leftStickX < -.04 || leftStickY > .04 || leftStickY < -.04){
 					boolean backward = false;
 					if (leftStickY > 0)
@@ -326,10 +333,10 @@ public class Footsteps {
 					camera.freezeXAndZ();
 
 				if (rightStickX > .04 || rightStickX < -.04 || rightStickY > .04 || rightStickY < -.04){
-					camera.addYaw(rightStickX * joystickPovSpeed * delta / 1000);
-					camera.addPitch(rightStickY * joystickPovSpeed * delta / 1000);
+					camera.setYaw(camera.getYaw() + rightStickX * joystickPovSpeed * delta / 1000);
+					camera.setPitch(camera.getPitch() + rightStickY * joystickPovSpeed * delta / 1000);
 				}
-				
+
 				float a = joystick.getComponentValue(Identifier.Button._0);
 				if (a > 0 && !jumping && !falling)
 					jumping = true;
@@ -337,7 +344,7 @@ public class Footsteps {
 				float start = joystick.getComponentValue(Identifier.Button._7);
 				if (start > 0)
 					break;
-				
+
 				float select = joystick.getComponentValue(Identifier.Button._6);
 				if (select > 0){
 					if (System.currentTimeMillis() - lastPress > 200){
@@ -348,7 +355,7 @@ public class Footsteps {
 						lastPress = System.currentTimeMillis();
 					}
 				}
-				
+
 				float x = joystick.getComponentValue(Identifier.Button._2);
 				if (x > 0){
 					if (System.currentTimeMillis() - lastPress > 200){
@@ -374,7 +381,9 @@ public class Footsteps {
 
 			grassTexture.bind();
 			GL11.glCallList(heightMapListHandle);
-			//GL11.glCallList(bunnyListHandle);
+			Model.rotate(0, 90, 0);
+			GL11.glTranslatef(-250, 50, 250);
+			GL11.glCallList(bunnyListHandle);
 
 			dx = Mouse.getDX();
 			dy = Mouse.getDY() * -1;
@@ -393,8 +402,8 @@ public class Footsteps {
 				drawString(10, 255, runtime.maxMemory() / mb + "mb allocated memory: " + (runtime.maxMemory() - runtime.freeMemory()) / mb + "mb used, " + runtime.freeMemory() / mb + "mb free");
 			}
 
-			camera.addYaw(dx * mouseSensitivity);
-			camera.addPitch(dy * mouseSensitivity);
+			camera.setYaw(camera.getYaw() + dx * mouseSensitivity);
+			camera.setPitch(camera.getPitch() + dy * mouseSensitivity);
 
 			if (!movedByGamepad){
 				if (Keyboard.isKeyDown(Keyboard.KEY_W))
@@ -479,7 +488,7 @@ public class Footsteps {
 			}
 
 			/*if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
-				camera.flyDown(movementSpeed * delta);*/
+				camera.flyDown(movementSpeed * delta / 100f);*/
 
 			if (Keyboard.isKeyDown(Keyboard.KEY_L))
 				lightPosition = new Vector3f(camera.position.x * -1, camera.position.y * -1, camera.position.z * -1);

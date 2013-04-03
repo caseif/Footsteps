@@ -3,8 +3,6 @@ package net.amigocraft.Footsteps;
 import java.util.ArrayList;
 import net.java.games.input.Component;
 import net.java.games.input.Component.Identifier;
-import net.java.games.input.Component.Identifier.Axis;
-import net.java.games.input.Component.Identifier.Button;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 
