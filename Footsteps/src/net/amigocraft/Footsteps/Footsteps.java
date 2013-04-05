@@ -220,7 +220,7 @@ public class Footsteps {
 			catch (IOException e){
 				e.printStackTrace();
 			}
-			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glBegin(GL11.GL_TRIANGLES);
 			GL11.glColor3f(0.3f, 0.3f, 0.3f);
 			GL11.glMaterialf(GL11.GL_BACK, GL11.GL_SHININESS, 1f);
 			for (float x = 1; x < hm.getWidth(null); x++){
@@ -252,16 +252,16 @@ public class Footsteps {
 						float y2 = shade2 / yDivide;
 
 						// y3
-						int rgb3 = hm.getRGB((int)x, (int)z);
+						int rgb3 = hm.getRGB((int)x - 1, (int)z);
 						Color color3 = new Color(rgb3);
 						int red3 = color3.getRed();
 						int green3 = color3.getGreen();
 						int blue3 = color3.getBlue();
 						int shade3 = (red3 + green3 + blue3) / 3;
 						float y3 = shade3 / yDivide;
-
+						
 						// y4
-						int rgb4 = hm.getRGB((int)x - 1, (int)z);
+						int rgb4 = hm.getRGB((int)x, (int)z);
 						Color color4 = new Color(rgb4);
 						int red4 = color4.getRed();
 						int green4 = color4.getGreen();
@@ -271,18 +271,35 @@ public class Footsteps {
 
 						if (colorize)
 							GL11.glColor3f(newRed1 / 256f, newGreen1 / 256f, newBlue1 / 256f);
+						
+						// triangle 1
 						if (textured)
 							GL11.glTexCoord2f(0, 0);
+						GL11.glNormal3f(0, 1, 0);
 						GL11.glVertex3f(x, y1, z);
 						if (textured)
 							GL11.glTexCoord2f(1, 0);
+						GL11.glNormal3f(0, 1, 0);
 						GL11.glVertex3f(x + 1f,y2, z);
 						if (textured)
-							GL11.glTexCoord2f(1, 1);
-						GL11.glVertex3f(x + 1f, y3, z + 1f);
+							GL11.glTexCoord2f(0, 1);
+						GL11.glNormal3f(0, 1, 0);
+						GL11.glVertex3f(x, y3, z + 1f);
+						
+						// triangle 2
+						if (textured)
+							GL11.glTexCoord2f(1, 0);
+						GL11.glNormal3f(0, 1, 0);
+						GL11.glVertex3f(x + 1f, y2, z);
 						if (textured)
 							GL11.glTexCoord2f(0, 1);
-						GL11.glVertex3f(x, y4, z + 1f);
+						GL11.glNormal3f(0, 1, 0);
+						GL11.glVertex3f(x, y3, z + 1f);
+						if (textured)
+							GL11.glTexCoord2f(1, 1);
+						GL11.glNormal3f(0, 1, 0);
+						GL11.glVertex3f(x + 1f, y4, z + 1f);
+						
 						terrainCap.add(new Location(x, y1, z));
 					}
 				}
@@ -486,9 +503,9 @@ public class Footsteps {
 
 			/*if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
 				camera.flyDown(movementSpeed * delta / 100f);*/
-
-			if (Keyboard.isKeyDown(Keyboard.KEY_L))
-				lightPosition = new Vector3f(camera.position.x * -1, camera.position.y * -1, camera.position.z * -1);
+			
+			//if (Keyboard.isKeyDown(Keyboard.KEY_L))
+			lightPosition = new Vector3f(-camera.position.x, -camera.position.y, -camera.position.z);
 
 			for (Location l : terrainCap){
 				if (l.xZEquals(new Location((int)camera.position.x * -1, (int)camera.position.y * -1, (int)camera.position.z * -1))){
@@ -571,7 +588,7 @@ public class Footsteps {
 
 			camera.lookThrough();
 
-			GL11.glLight(GL11.GL_LIGHT0, GL11.GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
+			GL11.glLight(GL11.GL_LIGHT1, GL11.GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
 
 			Display.sync(60);
 
