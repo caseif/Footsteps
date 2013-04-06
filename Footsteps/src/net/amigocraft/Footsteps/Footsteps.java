@@ -21,7 +21,8 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
-import org.lwjgl.opengl.GL11;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 import org.newdawn.slick.UnicodeFont;
@@ -64,27 +65,31 @@ public class Footsteps {
 	public boolean backward = false;
 	public boolean ground = false;
 
-	public boolean gamepad = false;
+	private boolean gamepad = false;
 	public boolean smoothing = false;
-	public boolean debug = false;
+	private boolean debug = false;
 	public boolean fullscreen = false;
 
 	public int playerHeight = 10;
-	public float gravity = 3f;
+	public float gravity = 5f;
 	public float jumpSpeed = 3f;
 	public float jumpDistance = 2f;
 	public float fallIncrease = 15f;
 	public float lastFps = 0f;
 	public float currentTime = 0f;
-	public int currentFps = 0;
-	public boolean froze = false;
+	private int currentFps = 0;
 
-	public boolean wireframe = false;
-	public boolean colorize = false;
-	public boolean textured = true;
-	public boolean colorSky = true;
+	private boolean wireframe = false;
+	private boolean colorize = false;
+	private boolean textured = true;
+	private boolean colorSky = true;
 
 	public static Model bunnyModel;
+	
+	private static final String VERTEX_SHADER = "/net/amigocraft/Footsteps/shaders/shader.vs";
+    private static final String FRAGMENT_SHADER = "/net/amigocraft/Footsteps/shaders/shader.fs";
+	
+	private static int shaderProgram;
 
 	List<Location> terrainCap = new ArrayList<Location>();
 	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
@@ -132,27 +137,29 @@ public class Footsteps {
 			ex.printStackTrace();
 		}
 
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glLoadIdentity();
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
 		GLU.gluPerspective(30f, 1280f / 720f, 0.001f, 1000f);
-		GL11.glOrtho(1, 1, 1, 1, 1, -1);
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glLoadIdentity();
-		GL11.glShadeModel(GL11.GL_SMOOTH);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glEnable(GL11.GL_LIGHT0);
-		GL11.glLightModel(GL11.GL_LIGHT_MODEL_AMBIENT, asFloatBuffer(new float[]{0.05f, 0.05f, 0.05f, 1f}));
-		GL11.glLight(GL11.GL_LIGHT0, GL11.GL_DIFFUSE, asFloatBuffer(new float[]{1.5f, 1.5f, 1.5f, 1f}));
-		//GL11.glEnable(GL11.GL_CULL_FACE);
-		//GL11.glCullFace(GL11.GL_FRONT);
-		GL11.glEnable(GL11.GL_COLOR_MATERIAL);
-		GL11.glColorMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_ALPHA_TEST);
-		GL11.glAlphaFunc(GL11.GL_GREATER, 0);
+		glOrtho(1, 1, 1, 1, 1, -1);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glShadeModel(GL_SMOOTH);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+		glLightModel(GL_LIGHT_MODEL_AMBIENT, asFloatBuffer(new float[]{0.05f, 0.05f, 0.05f, 1f}));
+		glLight(GL_LIGHT0, GL_DIFFUSE, asFloatBuffer(new float[]{1.5f, 1.5f, 1.5f, 1f}));
+		//glEnable(GL_CULL_FACE);
+		//glCullFace(GL_FRONT);
+		glEnable(GL_COLOR_MATERIAL);
+		glColorMaterial(GL_FRONT, GL_DIFFUSE);
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_ALPHA_TEST);
+		glAlphaFunc(GL_GREATER, 0);
+		
+		shaderProgram = ShaderLoader.loadShaderPair(VERTEX_SHADER, FRAGMENT_SHADER);
 
 		if (joystick.isControllerConnected()){
 			System.out.println("Gamepad \"" + joystick.getControllerName() + "\" found");
@@ -161,7 +168,7 @@ public class Footsteps {
 
 
 		if (colorSky)
-			GL11.glClearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3]);
+			glClearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3]);
 
 		try {
 			grassTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
@@ -176,10 +183,10 @@ public class Footsteps {
 		Mouse.setGrabbed(true);
 
 		// this code is here as a reference for future models
-		int bunnyListHandle = GL11.glGenLists(1);
-		GL11.glNewList(bunnyListHandle, GL11.GL_COMPILE);
+		int bunnyListHandle = glGenLists(1);
+		glNewList(bunnyListHandle, GL_COMPILE);
 		{
-			GL11.glBegin(GL11.GL_TRIANGLES);
+			glBegin(GL_TRIANGLES);
 			try {
 				bunnyModel = ObjLoader.loadModel(this.getClass().getClassLoader().getResourceAsStream("models/bunny.obj"));
 			}
@@ -188,28 +195,28 @@ public class Footsteps {
 				Display.destroy();
 				System.exit(1);
 			}
-			//GL11.glColor3f(0.30f, 0.1f, 0.1f);
+			//glColor3f(0.30f, 0.1f, 0.1f);
 			for (Face f : bunnyModel.faces){
 				Vector3f n1 = bunnyModel.normals.get((int)f.normal.x - 1);
-				GL11.glNormal3f(n1.x, n1.y, n1.z);
+				glNormal3f(n1.x, n1.y, n1.z);
 				Vector3f v1 = bunnyModel.vertices.get((int)f.vertex.x - 1);
-				GL11.glVertex3f(v1.x, v1.y, v1.z);
+				glVertex3f(v1.x, v1.y, v1.z);
 				Vector3f n2 = bunnyModel.normals.get((int)f.normal.y - 1);
-				GL11.glNormal3f(n2.x, n2.y, n2.z);
+				glNormal3f(n2.x, n2.y, n2.z);
 				Vector3f v2 = bunnyModel.vertices.get((int)f.vertex.y - 1);
-				GL11.glVertex3f(v2.x, v2.y, v2.z);
+				glVertex3f(v2.x, v2.y, v2.z);
 				Vector3f n3 = bunnyModel.normals.get((int)f.normal.z - 1);
-				GL11.glNormal3f(n3.x, n3.y, n3.z);
+				glNormal3f(n3.x, n3.y, n3.z);
 				Vector3f v3 = bunnyModel.vertices.get((int)f.vertex.z - 1);
-				GL11.glVertex3f(v3.x, v3.y, v3.z);
+				glVertex3f(v3.x, v3.y, v3.z);
 			}
 
-			GL11.glEnd();
+			glEnd();
 		}
-		GL11.glEndList();
+		glEndList();
 
-		int heightMapListHandle = GL11.glGenLists(1);
-		GL11.glNewList(heightMapListHandle, GL11.GL_COMPILE);
+		int heightMapListHandle = glGenLists(1);
+		glNewList(heightMapListHandle, GL_COMPILE);
 		{
 			BufferedImage hm = null;
 			BufferedImage hmRef = null;
@@ -220,9 +227,9 @@ public class Footsteps {
 			catch (IOException e){
 				e.printStackTrace();
 			}
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			GL11.glColor3f(0.3f, 0.3f, 0.3f);
-			GL11.glMaterialf(GL11.GL_BACK, GL11.GL_SHININESS, 1f);
+			glBegin(GL_TRIANGLES);
+			glColor3f(0.3f, 0.3f, 0.3f);
+			glMaterialf(GL_BACK, GL_SHININESS, 1f);
 			for (float x = 1; x < hm.getWidth(null); x++){
 				for (float z = 1; z < hm.getHeight(null); z++){
 					if (x < hm.getWidth(null) && z < hm.getHeight(null)){
@@ -268,45 +275,55 @@ public class Footsteps {
 						int blue4 = color4.getBlue();
 						int shade4 = (red4 + green4 + blue4) / 3;
 						float y4 = shade4 / yDivide;
-
+						
 						if (colorize)
-							GL11.glColor3f(newRed1 / 256f, newGreen1 / 256f, newBlue1 / 256f);
+							glColor3f(newRed1 / 256f, newGreen1 / 256f, newBlue1 / 256f);
 						
 						// triangle 1
 						if (textured)
-							GL11.glTexCoord2f(0, 0);
-						GL11.glNormal3f(0, 1, 0);
-						GL11.glVertex3f(x, y1, z);
+							glTexCoord2f(0, 0);
+						Vector3f n1 = getVectorNormal(new Vector3f(x, y1, z));
+						glNormal3f(n1.getX(), n1.getY(), n1.getZ());
+						glVertex3f(x, y1, z);
+						
 						if (textured)
-							GL11.glTexCoord2f(1, 0);
-						GL11.glNormal3f(0, 1, 0);
-						GL11.glVertex3f(x + 1f,y2, z);
+							glTexCoord2f(1, 0);
+						Vector3f n2 = getVectorNormal(new Vector3f(x + 1f, y2, z));
+						glNormal3f(n2.getX(), n2.getY(), n2.getZ());
+						glVertex3f(x + 1f, y2, z);
+						
 						if (textured)
-							GL11.glTexCoord2f(0, 1);
-						GL11.glNormal3f(0, 1, 0);
-						GL11.glVertex3f(x, y3, z + 1f);
+							glTexCoord2f(0, 1);
+						Vector3f n3 = getVectorNormal(new Vector3f(x, y3, z + 1f));
+						glNormal3f(n3.getX(), n3.getY(), n3.getZ());
+						glVertex3f(x, y3, z + 1f);
 						
 						// triangle 2
 						if (textured)
-							GL11.glTexCoord2f(1, 0);
-						GL11.glNormal3f(0, 1, 0);
-						GL11.glVertex3f(x + 1f, y2, z);
+							glTexCoord2f(1, 0);
+						Vector3f n4 = getVectorNormal(new Vector3f(x + 1f, y2, z));
+						glNormal3f(n4.getX(), n4.getY(), n4.getZ());
+						glVertex3f(x + 1f, y2, z);
+						
 						if (textured)
-							GL11.glTexCoord2f(0, 1);
-						GL11.glNormal3f(0, 1, 0);
-						GL11.glVertex3f(x, y3, z + 1f);
+							glTexCoord2f(0, 1);
+						Vector3f n5 = getVectorNormal(new Vector3f(x, y3, z + 1f));
+						glNormal3f(n5.getX(), n5.getY(), n5.getZ());
+						glVertex3f(x, y3, z + 1f);
+						
 						if (textured)
-							GL11.glTexCoord2f(1, 1);
-						GL11.glNormal3f(0, 1, 0);
-						GL11.glVertex3f(x + 1f, y4, z + 1f);
+							glTexCoord2f(1, 1);
+						Vector3f n6 = getVectorNormal(new Vector3f(x + 1f, y4, z + 1f));
+						glNormal3f(n6.getX(), n6.getY(), n6.getZ());
+						glVertex3f(x + 1f, y4, z + 1f);
 						
 						terrainCap.add(new Location(x, y1, z));
 					}
 				}
 			}
-			GL11.glEnd();
+			glEnd();
 		}
-		GL11.glEndList();
+		glEndList();
 
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 
@@ -316,7 +333,7 @@ public class Footsteps {
 
 			boolean movedByGamepad = false;
 
-			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			if (gamepad){
 				if (!joystick.pollController())
@@ -377,27 +394,23 @@ public class Footsteps {
 							wireframe = true;
 						lastPress = System.currentTimeMillis();
 					}
-					try {
-						Runtime.getRuntime().exec("java -jar \"C:\\Users\\Maxim\\Documents\\Java\\Games\\Nightmare\\Nightmare.jar\"");
-					}
-					catch (IOException e){
-						e.printStackTrace();
-					}
 				}
 			}
 
 			if (wireframe)
-				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			else
-				GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 			grassTexture.bind();
-			GL11.glCallList(heightMapListHandle);
-			GL11.glTranslatef(250, 37, 250);
-			GL11.glRotatef(bunnyFrame, 0f, 1f, 0f);
+			glCallList(heightMapListHandle);
+			glTranslatef(250, 37, 250);
+			glRotatef(bunnyFrame, 0f, 1f, 0f);
 			bunnyFrame += 1;
 			bunnyTexture.bind();
-			GL11.glCallList(bunnyListHandle);
+			//glUseProgram(shaderProgram);
+			glCallList(bunnyListHandle);
+			//glUseProgram(0);
 
 			dx = Mouse.getDX();
 			dy = Mouse.getDY() * -1;
@@ -505,7 +518,7 @@ public class Footsteps {
 				camera.flyDown(movementSpeed * delta / 100f);*/
 			
 			//if (Keyboard.isKeyDown(Keyboard.KEY_L))
-			lightPosition = new Vector3f(-camera.position.x, -camera.position.y, -camera.position.z);
+				lightPosition = new Vector3f(-camera.position.x, -camera.position.y, -camera.position.z);
 
 			for (Location l : terrainCap){
 				if (l.xZEquals(new Location((int)camera.position.x * -1, (int)camera.position.y * -1, (int)camera.position.z * -1))){
@@ -555,8 +568,6 @@ public class Footsteps {
 					jumping = false;
 					falling = true;
 					jumpFrame = 0;
-					jumpFreezeFrame = 0;
-					froze = false;
 				}
 			}
 			else {
@@ -584,16 +595,17 @@ public class Footsteps {
 					camera.walkBackward(movementSpeed * delta / 1000);
 			}
 
-			GL11.glLoadIdentity();
+			glLoadIdentity();
 
 			camera.lookThrough();
 
-			GL11.glLight(GL11.GL_LIGHT1, GL11.GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
+			glLight(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
 
 			Display.sync(60);
 
 			Display.update();
 		}
+		glDeleteProgram(shaderProgram);
 		Display.destroy();
 	}
 
@@ -639,24 +651,24 @@ public class Footsteps {
 	}
 
 	public void drawString(int x, int y, String str){
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glPushMatrix();
-		GL11.glLoadIdentity();
-		GL11.glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1 );
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glPushMatrix();
-		GL11.glLoadIdentity();
-		GL11.glDisable(GL11.GL_LIGHTING);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1 );
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+		glDisable(GL_LIGHTING);
 		if (wireframe)
-			GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		font.drawString(x, y, str);
 		if (wireframe)
-			GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
-		GL11.glEnable(GL11.GL_LIGHTING);
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glPopMatrix();
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glPopMatrix();
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glEnable(GL_LIGHTING);
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
 	}
 
 	public BufferedImage scaleImage(BufferedImage img, int width, int height){
@@ -691,5 +703,35 @@ public class Footsteps {
 			currentFps = (int)(1000 / delta);
 			lastFps = time;
 		}
+	}
+	
+	public Vector3f getNormal(Vector3f p1, Vector3f p2, Vector3f p3){
+	    Vector3f v = new Vector3f();
+
+	    Vector3f calU = new Vector3f(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+	    Vector3f calV = new Vector3f(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
+
+	    v.setX(calU.getY() * calV.getZ() - calU.getZ() * calV.getY());
+	    v.setY(calU.getZ() * calV.getX() - calU.getX() * calV.getZ());
+	    v.setZ(calU.getX() * calV.getY() - calU.getY() * calV.getX());
+
+	    return (Vector3f)v.normalise();
+	}
+	
+	public Vector3f getVectorNormal(Vector3f p){
+		Vector3f t1 = getNormal(p, new Vector3f(p.getX() - 1, p.getY(), p.getZ()), new Vector3f(p.getX(), p.getY(), p.getZ() - 1));
+		Vector3f t2 = getNormal(p, new Vector3f(p.getX() + 1, p.getY(), p.getZ()), new Vector3f(p.getX(), p.getY(), p.getZ() - 1));
+		Vector3f t3 = getNormal(p, new Vector3f(p.getX() + 1, p.getY(), p.getZ()), new Vector3f(p.getX(), p.getY(), p.getZ() + 1));
+		Vector3f t4 = getNormal(p, new Vector3f(p.getX() - 1, p.getY(), p.getZ()), new Vector3f(p.getX(), p.getY(), p.getZ() + 1));
+		
+		float x = t1.getX() + t2.getX() + t3.getX() + t4.getX();
+		float y = t1.getY() + t2.getY() + t3.getY() + t4.getY();
+		float z = t1.getZ() + t2.getZ() + t3.getZ() + t4.getZ();
+		
+		Vector3f v = new Vector3f(x, y, z);
+		
+		//System.out.println(t1.length() + ", " + t2.length() + ", " + t3.length() + ", " + v.length());
+		
+		return (Vector3f)v;//.normalise();
 	}
 }
