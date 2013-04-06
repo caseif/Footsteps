@@ -90,6 +90,7 @@ public class Footsteps {
     private static final String FRAGMENT_SHADER = "/net/amigocraft/Footsteps/shaders/shader.fs";
 	
 	private static int shaderProgram;
+	private static int diffuseModifierUniform;
 
 	List<Location> terrainCap = new ArrayList<Location>();
 	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
@@ -160,6 +161,7 @@ public class Footsteps {
 		glAlphaFunc(GL_GREATER, 0);
 		
 		shaderProgram = ShaderLoader.loadShaderPair(VERTEX_SHADER, FRAGMENT_SHADER);
+		diffuseModifierUniform = glGetUniformLocation(shaderProgram, "diffuseLightIntensity");
 
 		if (joystick.isControllerConnected()){
 			System.out.println("Gamepad \"" + joystick.getControllerName() + "\" found");
@@ -227,8 +229,9 @@ public class Footsteps {
 			catch (IOException e){
 				e.printStackTrace();
 			}
+			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
+			glColor3f(0.45f, 0.35f, 0.1f);
 			glBegin(GL_TRIANGLES);
-			glColor3f(0.3f, 0.3f, 0.3f);
 			glMaterialf(GL_BACK, GL_SHININESS, 1f);
 			for (float x = 1; x < hm.getWidth(null); x++){
 				for (float z = 1; z < hm.getHeight(null); z++){
@@ -408,9 +411,10 @@ public class Footsteps {
 			glRotatef(bunnyFrame, 0f, 1f, 0f);
 			bunnyFrame += 1;
 			bunnyTexture.bind();
-			//glUseProgram(shaderProgram);
+			glUseProgram(shaderProgram);
+			glUniform1f(diffuseModifierUniform, 10f);
 			glCallList(bunnyListHandle);
-			//glUseProgram(0);
+			glUseProgram(0);
 
 			dx = Mouse.getDX();
 			dy = Mouse.getDY() * -1;
