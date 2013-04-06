@@ -85,10 +85,10 @@ public class Footsteps {
 	private boolean colorSky = true;
 
 	public static Model bunnyModel;
-	
+
 	private static final String VERTEX_SHADER = "/net/amigocraft/Footsteps/shaders/shader.vs";
-    private static final String FRAGMENT_SHADER = "/net/amigocraft/Footsteps/shaders/shader.fs";
-	
+	private static final String FRAGMENT_SHADER = "/net/amigocraft/Footsteps/shaders/shader.fs";
+
 	private static int shaderProgram;
 	private static int diffuseModifierUniform;
 
@@ -147,19 +147,21 @@ public class Footsteps {
 		glShadeModel(GL_SMOOTH);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT0);
+		float amb = 0.5f;
+		float ambientLight[] = {amb, amb, amb, 1.0f};
+		glLight(GL_LIGHT1, GL_AMBIENT, asFloatBuffer(ambientLight));
+		
 		glLightModel(GL_LIGHT_MODEL_AMBIENT, asFloatBuffer(new float[]{0.05f, 0.05f, 0.05f, 1f}));
 		glLight(GL_LIGHT0, GL_DIFFUSE, asFloatBuffer(new float[]{1.5f, 1.5f, 1.5f, 1f}));
-		//glEnable(GL_CULL_FACE);
-		//glCullFace(GL_FRONT);
+		glCullFace(GL_BACK);
 		glEnable(GL_COLOR_MATERIAL);
-		glColorMaterial(GL_FRONT, GL_DIFFUSE);
+		glColorMaterial(GL_FRONT, GL_AMBIENT);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_ALPHA_TEST);
 		glAlphaFunc(GL_GREATER, 0);
-		
+
 		shaderProgram = ShaderLoader.loadShaderPair(VERTEX_SHADER, FRAGMENT_SHADER);
 		diffuseModifierUniform = glGetUniformLocation(shaderProgram, "diffuseLightIntensity");
 
@@ -189,6 +191,9 @@ public class Footsteps {
 		glNewList(bunnyListHandle, GL_COMPILE);
 		{
 			glBegin(GL_TRIANGLES);
+			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
+			glMaterialf(GL_BACK, GL_SHININESS, 10f);
+			glColor3f(0.45f, 0.35f, 0.1f);
 			try {
 				bunnyModel = ObjLoader.loadModel(this.getClass().getClassLoader().getResourceAsStream("models/bunny.obj"));
 			}
@@ -197,7 +202,6 @@ public class Footsteps {
 				Display.destroy();
 				System.exit(1);
 			}
-			//glColor3f(0.30f, 0.1f, 0.1f);
 			for (Face f : bunnyModel.faces){
 				Vector3f n1 = bunnyModel.normals.get((int)f.normal.x - 1);
 				glNormal3f(n1.x, n1.y, n1.z);
@@ -229,10 +233,9 @@ public class Footsteps {
 			catch (IOException e){
 				e.printStackTrace();
 			}
-			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
-			glColor3f(0.45f, 0.35f, 0.1f);
 			glBegin(GL_TRIANGLES);
-			glMaterialf(GL_BACK, GL_SHININESS, 1f);
+			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
+			glColor3f(0.05f, 0.2f, 0f);
 			for (float x = 1; x < hm.getWidth(null); x++){
 				for (float z = 1; z < hm.getHeight(null); z++){
 					if (x < hm.getWidth(null) && z < hm.getHeight(null)){
@@ -269,7 +272,7 @@ public class Footsteps {
 						int blue3 = color3.getBlue();
 						int shade3 = (red3 + green3 + blue3) / 3;
 						float y3 = shade3 / yDivide;
-						
+
 						// y4
 						int rgb4 = hm.getRGB((int)x, (int)z);
 						Color color4 = new Color(rgb4);
@@ -278,48 +281,43 @@ public class Footsteps {
 						int blue4 = color4.getBlue();
 						int shade4 = (red4 + green4 + blue4) / 3;
 						float y4 = shade4 / yDivide;
-						
+
 						if (colorize)
 							glColor3f(newRed1 / 256f, newGreen1 / 256f, newBlue1 / 256f);
-						
+
+						Vector3f v1 = new Vector3f(x, y1, z);
+						Vector3f v2 = new Vector3f(x + 1f, y2, z);
+						Vector3f v3 = new Vector3f(x, y3, z + 1f);
+						Vector3f v4 = new Vector3f(x + 1f, y4, z + 1f);
+
 						// triangle 1
+						//glNormal3f(n1.x, n1.y, n1.z);
 						if (textured)
 							glTexCoord2f(0, 0);
-						Vector3f n1 = getVectorNormal(new Vector3f(x, y1, z));
-						glNormal3f(n1.getX(), n1.getY(), n1.getZ());
-						glVertex3f(x, y1, z);
-						
+						glVertex3f(v1.x, v1.y, v1.z);
+
 						if (textured)
 							glTexCoord2f(1, 0);
-						Vector3f n2 = getVectorNormal(new Vector3f(x + 1f, y2, z));
-						glNormal3f(n2.getX(), n2.getY(), n2.getZ());
-						glVertex3f(x + 1f, y2, z);
-						
+						glVertex3f(v2.x, v2.y, v2.z);
+
 						if (textured)
 							glTexCoord2f(0, 1);
-						Vector3f n3 = getVectorNormal(new Vector3f(x, y3, z + 1f));
-						glNormal3f(n3.getX(), n3.getY(), n3.getZ());
-						glVertex3f(x, y3, z + 1f);
-						
+						glVertex3f(v3.x, v3.y, v3.z);
+
 						// triangle 2
+						//glNormal3f(n2.x, n2.y, n2.z);
 						if (textured)
 							glTexCoord2f(1, 0);
-						Vector3f n4 = getVectorNormal(new Vector3f(x + 1f, y2, z));
-						glNormal3f(n4.getX(), n4.getY(), n4.getZ());
-						glVertex3f(x + 1f, y2, z);
-						
+						glVertex3f(v2.x, v2.y, v2.z);
+
 						if (textured)
 							glTexCoord2f(0, 1);
-						Vector3f n5 = getVectorNormal(new Vector3f(x, y3, z + 1f));
-						glNormal3f(n5.getX(), n5.getY(), n5.getZ());
-						glVertex3f(x, y3, z + 1f);
-						
+						glVertex3f(v3.x, v3.y, v3.z);
+
 						if (textured)
 							glTexCoord2f(1, 1);
-						Vector3f n6 = getVectorNormal(new Vector3f(x + 1f, y4, z + 1f));
-						glNormal3f(n6.getX(), n6.getY(), n6.getZ());
-						glVertex3f(x + 1f, y4, z + 1f);
-						
+						glVertex3f(v4.x, v4.y, v4.z);
+
 						terrainCap.add(new Location(x, y1, z));
 					}
 				}
@@ -406,14 +404,21 @@ public class Footsteps {
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 			grassTexture.bind();
+			glEnable(GL_LIGHT1);
 			glCallList(heightMapListHandle);
+			glDisable(GL_LIGHT1);
+			
 			glTranslatef(250, 37, 250);
 			glRotatef(bunnyFrame, 0f, 1f, 0f);
 			bunnyFrame += 1;
 			bunnyTexture.bind();
 			glUseProgram(shaderProgram);
 			glUniform1f(diffuseModifierUniform, 10f);
+			glEnable(GL_LIGHT0);
+			glEnable(GL_CULL_FACE);
 			glCallList(bunnyListHandle);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_LIGHT0);
 			glUseProgram(0);
 
 			dx = Mouse.getDX();
@@ -520,9 +525,9 @@ public class Footsteps {
 
 			/*if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
 				camera.flyDown(movementSpeed * delta / 100f);*/
-			
+
 			//if (Keyboard.isKeyDown(Keyboard.KEY_L))
-				lightPosition = new Vector3f(-camera.position.x, -camera.position.y, -camera.position.z);
+			lightPosition = new Vector3f(-camera.position.x, -camera.position.y, -camera.position.z);
 
 			for (Location l : terrainCap){
 				if (l.xZEquals(new Location((int)camera.position.x * -1, (int)camera.position.y * -1, (int)camera.position.z * -1))){
@@ -708,34 +713,28 @@ public class Footsteps {
 			lastFps = time;
 		}
 	}
-	
+
 	public Vector3f getNormal(Vector3f p1, Vector3f p2, Vector3f p3){
-	    Vector3f v = new Vector3f();
+		Vector3f v = new Vector3f();
 
-	    Vector3f calU = new Vector3f(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-	    Vector3f calV = new Vector3f(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
+		Vector3f calU = new Vector3f(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+		Vector3f calV = new Vector3f(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
 
-	    v.setX(calU.getY() * calV.getZ() - calU.getZ() * calV.getY());
-	    v.setY(calU.getZ() * calV.getX() - calU.getX() * calV.getZ());
-	    v.setZ(calU.getX() * calV.getY() - calU.getY() * calV.getX());
+		v.setX(calU.getY() * calV.getZ() - calU.getZ() * calV.getY());
+		v.setY(calU.getZ() * calV.getX() - calU.getX() * calV.getZ());
+		v.setZ(calU.getX() * calV.getY() - calU.getY() * calV.getX());
 
-	    return (Vector3f)v.normalise();
+		return (Vector3f)v.normalise();
 	}
-	
-	public Vector3f getVectorNormal(Vector3f p){
-		Vector3f t1 = getNormal(p, new Vector3f(p.getX() - 1, p.getY(), p.getZ()), new Vector3f(p.getX(), p.getY(), p.getZ() - 1));
-		Vector3f t2 = getNormal(p, new Vector3f(p.getX() + 1, p.getY(), p.getZ()), new Vector3f(p.getX(), p.getY(), p.getZ() - 1));
-		Vector3f t3 = getNormal(p, new Vector3f(p.getX() + 1, p.getY(), p.getZ()), new Vector3f(p.getX(), p.getY(), p.getZ() + 1));
-		Vector3f t4 = getNormal(p, new Vector3f(p.getX() - 1, p.getY(), p.getZ()), new Vector3f(p.getX(), p.getY(), p.getZ() + 1));
-		
-		float x = t1.getX() + t2.getX() + t3.getX() + t4.getX();
-		float y = t1.getY() + t2.getY() + t3.getY() + t4.getY();
-		float z = t1.getZ() + t2.getZ() + t3.getZ() + t4.getZ();
-		
+
+	public Vector3f getVectorNormal(Vector3f n1, Vector3f n2, Vector3f n3, Vector3f n4){
+
+		float x = n1.getX() + n2.getX() + n3.getX() + n4.getX();
+		float y = n1.getY() + n2.getY() + n3.getY() + n4.getY();
+		float z = n1.getZ() + n2.getZ() + n3.getZ() + n4.getZ();
+
 		Vector3f v = new Vector3f(x, y, z);
-		
-		//System.out.println(t1.length() + ", " + t2.length() + ", " + t3.length() + ", " + v.length());
-		
+
 		return (Vector3f)v;//.normalise();
 	}
 }
