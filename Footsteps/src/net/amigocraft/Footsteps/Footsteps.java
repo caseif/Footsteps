@@ -78,6 +78,7 @@ public class Footsteps {
 	public float lastFps = 0f;
 	public float currentTime = 0f;
 	private int currentFps = 0;
+	private float terrainBrightness = 0.5f; // brightness is directly proportional to value
 
 	private boolean wireframe = false;
 	private boolean colorize = false;
@@ -147,8 +148,7 @@ public class Footsteps {
 		glShadeModel(GL_SMOOTH);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_LIGHTING);
-		float amb = 0.5f;
-		float ambientLight[] = {amb, amb, amb, 1.0f};
+		float ambientLight[] = {terrainBrightness, terrainBrightness, terrainBrightness, 1f};
 		glLight(GL_LIGHT1, GL_AMBIENT, asFloatBuffer(ambientLight));
 		
 		glLightModel(GL_LIGHT_MODEL_AMBIENT, asFloatBuffer(new float[]{0.05f, 0.05f, 0.05f, 1f}));
@@ -234,9 +234,9 @@ public class Footsteps {
 				e.printStackTrace();
 			}
 			glBegin(GL_TRIANGLES);
-			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
-			glColor3f(0.05f, 0.2f, 0f);
 			for (float x = 1; x < hm.getWidth(null); x++){
+				glMaterialf(GL_FRONT, GL_SHININESS, 10f);
+				glColor3f(0.05f, 0.2f, 0f);
 				for (float z = 1; z < hm.getHeight(null); z++){
 					if (x < hm.getWidth(null) && z < hm.getHeight(null)){
 						float yDivide = 5;
