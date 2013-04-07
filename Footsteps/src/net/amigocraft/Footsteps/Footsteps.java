@@ -234,9 +234,9 @@ public class Footsteps {
 				e.printStackTrace();
 			}
 			glBegin(GL_TRIANGLES);
+			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
+			glColor3f(0.05f, 0.2f, 0f);
 			for (float x = 1; x < hm.getWidth(null); x++){
-				glMaterialf(GL_FRONT, GL_SHININESS, 10f);
-				glColor3f(0.05f, 0.2f, 0f);
 				for (float z = 1; z < hm.getHeight(null); z++){
 					if (x < hm.getWidth(null) && z < hm.getHeight(null)){
 						float yDivide = 5;
