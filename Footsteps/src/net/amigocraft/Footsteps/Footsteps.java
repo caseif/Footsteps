@@ -23,6 +23,7 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
+
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 import org.newdawn.slick.UnicodeFont;
@@ -39,7 +40,7 @@ import org.newdawn.slick.opengl.TextureLoader;
  */
 public class Footsteps {
 
-	Camera camera = new Camera(250, 50, 150);
+	static Camera camera = new Camera(250, 50, 150);
 	float dx = 0.0f;
 	float dy = 0.0f;
 	public static float delta = 0;
@@ -78,12 +79,11 @@ public class Footsteps {
 	public float lastFps = 0f;
 	public float currentTime = 0f;
 	private int currentFps = 0;
-	private float terrainBrightness = 0.5f; // brightness is directly proportional to value
+	private float terrainBrightness = 0.1f; // brightness is directly proportional to value
 
 	private boolean wireframe = false;
 	private boolean colorize = false;
 	private boolean textured = true;
-	private boolean colorSky = true;
 
 	public static Model bunnyModel;
 
@@ -100,11 +100,11 @@ public class Footsteps {
 
 	public float[] skyColor = new float[]{0f, 0.7f, 0.9f, 1.1f};
 
-	public Texture grassTexture;
-	public Texture bunnyTexture;
+	public Texture grassTexture, bunnyTexture;
 
 	// GUI related variables
 	private static UnicodeFont font;
+	private static UnicodeFont backFont;
 
 	public static void main(String[] args){
 		new Footsteps();
@@ -170,10 +170,6 @@ public class Footsteps {
 			gamepad = true;
 		}
 
-
-		if (colorSky)
-			glClearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3]);
-
 		try {
 			grassTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
 			bunnyTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/rabbitfur.png"));
@@ -187,8 +183,8 @@ public class Footsteps {
 		Mouse.setGrabbed(true);
 
 		// this code is here as a reference for future models
-		int bunnyListHandle = glGenLists(1);
-		glNewList(bunnyListHandle, GL_COMPILE);
+		int bunnyHandle = glGenLists(1);
+		glNewList(bunnyHandle, GL_COMPILE);
 		{
 			glBegin(GL_TRIANGLES);
 			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
@@ -221,8 +217,8 @@ public class Footsteps {
 		}
 		glEndList();
 
-		int heightMapListHandle = glGenLists(1);
-		glNewList(heightMapListHandle, GL_COMPILE);
+		int terrainHandle = glGenLists(1);
+		glNewList(terrainHandle, GL_COMPILE);
 		{
 			BufferedImage hm = null;
 			BufferedImage hmRef = null;
@@ -235,7 +231,7 @@ public class Footsteps {
 			}
 			glBegin(GL_TRIANGLES);
 			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
-			glColor3f(0.05f, 0.2f, 0f);
+			glColor3f(0.85f, 1f, 0.85f);
 			for (float x = 1; x < hm.getWidth(null); x++){
 				for (float z = 1; z < hm.getHeight(null); z++){
 					if (x < hm.getWidth(null) && z < hm.getHeight(null)){
@@ -291,7 +287,6 @@ public class Footsteps {
 						Vector3f v4 = new Vector3f(x + 1f, y4, z + 1f);
 
 						// triangle 1
-						//glNormal3f(n1.x, n1.y, n1.z);
 						if (textured)
 							glTexCoord2f(0, 0);
 						glVertex3f(v1.x, v1.y, v1.z);
@@ -305,7 +300,6 @@ public class Footsteps {
 						glVertex3f(v3.x, v3.y, v3.z);
 
 						// triangle 2
-						//glNormal3f(n2.x, n2.y, n2.z);
 						if (textured)
 							glTexCoord2f(1, 0);
 						glVertex3f(v2.x, v2.y, v2.z);
@@ -325,6 +319,8 @@ public class Footsteps {
 			glEnd();
 		}
 		glEndList();
+		
+		new SkyFactory();
 
 		while (!Display.isCloseRequested() && !Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
 
@@ -403,11 +399,23 @@ public class Footsteps {
 			else
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+			// skybox
+			glPushMatrix();
+			glLoadIdentity();
+			glRotatef(camera.getPitch() - 13, 1, 0, 0);
+			glRotatef(camera.getYaw(), 0, 1, 0);
+			glRotatef(5, 0, 0, 1);
+			//glTranslatef(0f, -0.15f, 0f);
+			glCallList(SkyFactory.getHandle());
+			glPopMatrix();
+			
+			// terrain
 			grassTexture.bind();
 			glEnable(GL_LIGHT1);
-			glCallList(heightMapListHandle);
+			glCallList(terrainHandle);
 			glDisable(GL_LIGHT1);
 			
+			// models
 			glTranslatef(250, 37, 250);
 			glRotatef(bunnyFrame, 0f, 1f, 0f);
 			bunnyFrame += 1;
@@ -416,7 +424,7 @@ public class Footsteps {
 			glUniform1f(diffuseModifierUniform, 10f);
 			glEnable(GL_LIGHT0);
 			glEnable(GL_CULL_FACE);
-			glCallList(bunnyListHandle);
+			glCallList(bunnyHandle);
 			glDisable(GL_CULL_FACE);
 			glDisable(GL_LIGHT0);
 			glUseProgram(0);
@@ -649,10 +657,16 @@ public class Footsteps {
 		font = new UnicodeFont(awtFont.deriveFont(0, size));
 		font.addAsciiGlyphs();
 		ColorEffect e = new ColorEffect();
-		e.setColor(Color.RED);
+		e.setColor(Color.WHITE);
 		font.getEffects().add(e);
+		backFont = new UnicodeFont(awtFont.deriveFont(0, size));
+		backFont.addAsciiGlyphs();
+		ColorEffect e2 = new ColorEffect();
+		e.setColor(Color.BLACK);
+		backFont.getEffects().add(e2);
 		try {
 			font.loadGlyphs();
+			backFont.loadGlyphs();
 		}
 		catch (Exception ex){
 			ex.printStackTrace();
@@ -670,6 +684,7 @@ public class Footsteps {
 		glDisable(GL_LIGHTING);
 		if (wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		backFont.drawString(x - 3, y - 3, str);
 		font.drawString(x, y, str);
 		if (wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
