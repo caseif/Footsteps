@@ -400,6 +400,8 @@ public class Footsteps {
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 			// skybox
+			if (wireframe)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glPushMatrix();
 			glLoadIdentity();
 			glRotatef(camera.getPitch() - 13, 1, 0, 0);
@@ -408,6 +410,8 @@ public class Footsteps {
 			//glTranslatef(0f, -0.15f, 0f);
 			glCallList(SkyFactory.getHandle());
 			glPopMatrix();
+			if (wireframe)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			
 			// terrain
 			grassTexture.bind();
