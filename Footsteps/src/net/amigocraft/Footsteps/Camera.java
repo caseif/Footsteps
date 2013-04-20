@@ -265,28 +265,32 @@ public class Camera {
 
 	public void lookThrough(){
 
-		if (!moved){
-			Random rand = new Random(10);
-			pitch += pitchFade / 5 * rand.nextFloat();
-			if (pitchFade > 0)
-				pitchFade -= Footsteps.delta / 50 * rand.nextFloat();
-			else
-				pitchFade += Footsteps.delta / 50 * rand.nextFloat();
+		if (!Footsteps.ingameMenu){
+
+			if (!moved){
+				Random rand = new Random(10);
+				pitch += pitchFade / 5 * rand.nextFloat();
+				if (pitchFade > 0)
+					pitchFade -= Footsteps.delta / 50 * rand.nextFloat();
+				else
+					pitchFade += Footsteps.delta / 50 * rand.nextFloat();
 
 
-			yaw += yawFade / 5 * rand.nextFloat();
-			if (yawFade > 0)
-				yawFade -= Footsteps.delta / 50 * rand.nextFloat();
-			else
-				yawFade += Footsteps.delta / 50 * rand.nextFloat();
+				yaw += yawFade / 5 * rand.nextFloat();
+				if (yawFade > 0)
+					yawFade -= Footsteps.delta / 50 * rand.nextFloat();
+				else
+					yawFade += Footsteps.delta / 50 * rand.nextFloat();
+			}
+
+			moved = false;
+
+			position = add(position, velocity, true);
+			GL11.glRotatef(pitch, 1.0f, 0.0f, 0.0f);
+			GL11.glRotatef(yaw, 0.0f, 1.0f, 0.0f);
+			GL11.glTranslatef(position.x, position.y, position.z);
+
 		}
-
-		moved = false;
-
-		position = add(position, velocity, true);
-		GL11.glRotatef(pitch, 1.0f, 0.0f, 0.0f);
-		GL11.glRotatef(yaw, 0.0f, 1.0f, 0.0f);
-		GL11.glTranslatef(position.x, position.y, position.z);
 	}
 
 	public Vector3f add(Vector3f vec, float x, float y, float z, boolean apply){
