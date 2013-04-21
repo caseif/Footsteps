@@ -454,7 +454,7 @@ public class Footsteps {
 						if (movementSpeed * delta / 1000 < 50) // just in case
 							camera.moveCustom(angle, movementSpeed * larger * delta / 1000, backward);
 						movedByGamepad = true;
-						moved = false;
+						moved = true;
 					}
 					else
 						camera.freezeXAndZ();
