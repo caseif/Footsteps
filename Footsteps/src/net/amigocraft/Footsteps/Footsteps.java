@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
@@ -16,11 +17,13 @@ import net.java.games.input.Controller;
 import net.java.games.input.Component.Identifier;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import static org.lwjgl.input.Keyboard.*;
 import static org.lwjgl.input.Mouse.*;
 
 import org.lwjgl.input.Mouse;
+import org.lwjgl.openal.AL;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import static org.lwjgl.opengl.GL11.*;
@@ -74,11 +77,12 @@ public class Footsteps {
 	private boolean debug = false;
 	public boolean fullscreen = false;
 
-	public int playerHeight = 10;
-	public float gravity = 5f;
-	public float jumpSpeed = 3f;
-	public float jumpDistance = 2f;
-	public float fallIncrease = 15f;
+	public final int playerHeight = 10;
+	public final float gravity = 5f;
+	public final float jumpSpeed = 3f;
+	public final float jumpDistance = 2f;
+	public final float fallIncrease = 15f;
+	public final int playerFootstepDelay = 500;
 	public float lastFps = 0f;
 	public float currentTime = 0f;
 	private int currentFps = 0;
@@ -87,7 +91,7 @@ public class Footsteps {
 	private boolean wireframe = false;
 	private boolean colorize = false;
 	private boolean textured = true;
-	
+
 	public int buttonWidth = 350;
 	public int buttonHeight = 50;
 
@@ -107,6 +111,10 @@ public class Footsteps {
 	public float[] skyColor = new float[]{0f, 0.7f, 0.9f, 1.1f};
 
 	public Texture grassTexture, bunnyTexture;
+
+	public List<Sound> grassSounds = new ArrayList<Sound>();
+
+	public float lastGrassSound = time;
 
 	// GUI related variables
 	private static UnicodeFont font;
@@ -177,12 +185,26 @@ public class Footsteps {
 			gamepad = true;
 		}
 
+		// textures
 		try {
 			grassTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
 			bunnyTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/rabbitfur.png"));
 		}
 		catch (Exception ex){
 			ex.printStackTrace();
+		}
+
+		// sounds
+		try {AL.create();}
+		catch (LWJGLException ex){ex.printStackTrace();}
+		grassSounds.add(new Sound("sounds/grass1.wav"));
+		grassSounds.add(new Sound("sounds/grass2.wav"));
+		grassSounds.add(new Sound("sounds/grass3.wav"));
+		grassSounds.add(new Sound("sounds/grass4.wav"));
+		grassSounds.add(new Sound("sounds/grass5.wav"));
+		grassSounds.add(new Sound("sounds/grass6.wav"));
+		for (Sound s : grassSounds){
+			s.initialize();
 		}
 
 		setUpFont();
@@ -222,7 +244,7 @@ public class Footsteps {
 				glVertex3f(v3.x, v3.y, v3.z);
 			}
 			glEnd();
-			
+
 			glDisable(GL_CULL_FACE);
 		}
 		glEndList();
@@ -341,7 +363,7 @@ public class Footsteps {
 			if (ingameMenu){
 				if (Mouse.isGrabbed())
 					Mouse.setGrabbed(false);
-				
+
 				// close menu
 				if (isKeyDown(KEY_ESCAPE)){
 					if (System.currentTimeMillis() - lastPress > 200){
@@ -349,11 +371,11 @@ public class Footsteps {
 						lastPress = System.currentTimeMillis();
 						if (!Mouse.isGrabbed())
 							Mouse.setGrabbed(true);
-						
+
 						continue;
 					}
 				}
-				
+
 				dx = getDX();
 				dy = getDY() * -1;
 
@@ -371,14 +393,14 @@ public class Footsteps {
 				glDisable(GL_DEPTH_TEST);
 				glDisable(GL_CULL_FACE);
 				glBegin(GL_QUADS);
-				
+
 				// block world from view
 				/*glColor3f(0f, 0f, 0f);
 				glVertex3f(0, 0, 0f);
 				glVertex3f(Display.getWidth(), 0, 0f);
 				glVertex3f(Display.getWidth(), Display.getHeight(), 0f);
 				glVertex3f(0, Display.getHeight(), 0f);*/
-				
+
 				glColor3f(.6f, .6f, .6f);
 				int resumeBtnPos = 200;
 				glVertex3f((Display.getWidth() / 2) - (buttonWidth / 2), resumeBtnPos, 1f);
@@ -399,10 +421,12 @@ public class Footsteps {
 				glPopMatrix();
 				glMatrixMode(GL_MODELVIEW);
 				glPopMatrix();
-				
+
 			}
-			
+
 			else {
+
+				boolean moved = false;
 
 				boolean movedByGamepad = false;
 
@@ -430,6 +454,7 @@ public class Footsteps {
 						if (movementSpeed * delta / 1000 < 50) // just in case
 							camera.moveCustom(angle, movementSpeed * larger * delta / 1000, backward);
 						movedByGamepad = true;
+						moved = false;
 					}
 					else
 						camera.freezeXAndZ();
@@ -528,8 +553,8 @@ public class Footsteps {
 							runtime.freeMemory() / mb + "mb free", true);
 				}
 
-				camera.setYaw(camera.getYaw() + dx * mouseSensitivity);
-				camera.setPitch(camera.getPitch() + dy * mouseSensitivity);
+				camera.setYaw(camera.getYaw() + dx * mouseSensitivity / (delta / 30));
+				camera.setPitch(camera.getPitch() + dy * mouseSensitivity / (delta / 30));
 
 				if (!movedByGamepad){
 					if (isKeyDown(KEY_W))
@@ -602,13 +627,13 @@ public class Footsteps {
 						lastPress = System.currentTimeMillis();
 					}
 				}
-				
+
 				// open menu
 				if (isKeyDown(KEY_ESCAPE)){
 					if (System.currentTimeMillis() - lastPress > 200){
 						ingameMenu = true;
 						lastPress = System.currentTimeMillis();
-						
+
 						continue;
 					}
 				}
@@ -644,7 +669,7 @@ public class Footsteps {
 									x2 = lo.getY();
 								else if (lo.getX() == l.getX() && lo.getZ() == l.getZ() + 1)
 									z2 = lo.getY();
-								
+
 								if (x2 != 0 && z2 != 0)
 									break;
 							}
@@ -653,7 +678,6 @@ public class Footsteps {
 							float xY = (l.getY() * (1 - xPercent)) + (x2 * xPercent);
 							float zY = (l.getY() * (1 - zPercent)) + (z2 * zPercent);
 							camera.position.setY(-((xY + zY) / 2) - playerHeight);
-							System.out.println(xPercent + ", " + zPercent + ", " + xY + ", " + zY + ", " + ((xY + zY) / 2));
 							break;
 						}
 						else {
@@ -696,22 +720,47 @@ public class Footsteps {
 				}
 
 				if (!movedByGamepad){
-					if (forward && left)
+					if (forward && left){
 						camera.forwardLeft(movementSpeed * delta / 1000);
-					else if (forward && right)
+						moved = true;
+					}
+					else if (forward && right){
 						camera.forwardRight(movementSpeed * delta / 1000);
-					else if (backward && left)
+						moved = true;
+					}
+					else if (backward && left){
 						camera.backwardLeft(movementSpeed * delta / 1000);
-					else if (backward && right)
+						moved = true;
+					}
+					else if (backward && right){
 						camera.backwardRight(movementSpeed * delta / 1000);
-					else if (left)
+						moved = true;
+					}
+					else if (left){
 						camera.strafeLeft(movementSpeed * delta / 1000);
-					else if (right)
+						moved = true;
+					}
+					else if (right){
 						camera.strafeRight(movementSpeed * delta / 1000);
-					else if (forward)
+						moved = true;
+					}
+					else if (forward){
 						camera.walkForward(movementSpeed * delta / 1000);
-					else if (backward)
+						moved = true;
+					}
+					else if (backward){
 						camera.walkBackward(movementSpeed * delta / 1000);
+						moved = true;
+					}
+
+					if (moved){
+						if (time - lastGrassSound > playerFootstepDelay){
+							Random rand = new Random();
+							int soundToPlay = rand.nextInt(grassSounds.size() - 1);
+							grassSounds.get(soundToPlay).play();
+							lastGrassSound = time;
+						}
+					}
 				}
 
 				glLoadIdentity();
@@ -726,6 +775,10 @@ public class Footsteps {
 
 			Display.update();
 		}
+		for (Sound s : grassSounds){
+			s.dispose();
+		}
+		AL.destroy();
 		glDeleteProgram(shaderProgram);
 		Display.destroy();
 	}
