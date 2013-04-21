@@ -553,8 +553,8 @@ public class Footsteps {
 							runtime.freeMemory() / mb + "mb free", true);
 				}
 
-				camera.setYaw(camera.getYaw() + dx * mouseSensitivity / (delta / 30));
-				camera.setPitch(camera.getPitch() + dy * mouseSensitivity / (delta / 30));
+				camera.setYaw(camera.getYaw() + dx * mouseSensitivity / (delta / 60));
+				camera.setPitch(camera.getPitch() + dy * mouseSensitivity / (delta / 60));
 
 				if (!movedByGamepad){
 					if (isKeyDown(KEY_W))
