@@ -7,10 +7,10 @@ import org.lwjgl.util.vector.Vector3f;
 
 public class Camera {
 
-	Vector3f position = null;
+	public Vector3f position = null;
 	Vector3f velocity = null;
 	//the rotation around the Y axis of the camera
-	float yaw = 0.0f;
+	public float yaw = 0.0f;
 	//the rotation around the X axis of the camera
 	public float pitch = 0.0f;
 

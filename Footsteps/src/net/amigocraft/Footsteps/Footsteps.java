@@ -1,24 +1,21 @@
 package net.amigocraft.Footsteps;
 
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import net.java.games.input.Controller;
-import net.java.games.input.Component.Identifier;
+import static net.amigocraft.Footsteps.util.BufferUtil.*;
+import static net.amigocraft.Footsteps.util.ImageUtil.*;
+import static net.amigocraft.Footsteps.util.MiscUtil.*;
+import static net.amigocraft.Footsteps.util.RenderUtil.*;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
-import org.lwjgl.Sys;
 import static org.lwjgl.input.Keyboard.*;
 import static org.lwjgl.input.Mouse.*;
 
@@ -31,8 +28,6 @@ import static org.lwjgl.opengl.GL20.*;
 
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
-import org.newdawn.slick.UnicodeFont;
-import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
@@ -45,36 +40,37 @@ import org.newdawn.slick.opengl.TextureLoader;
  */
 public class Footsteps {
 
-	static Camera camera = new Camera(250, 50, 150);
-	float dx = 0.0f;
-	float dy = 0.0f;
+	public static Camera camera = new Camera(250, 50, 150);
+	public float dx = 0.0f;
+	public float dy = 0.0f;
 	public static float delta = 0;
-	long lastTime = getTime();
-	long time = getTime();
-	static Vector3f lightPosition = new Vector3f(-500f, -100f, 500f);
-	long lastPress = (int)System.currentTimeMillis();
+	public long lastTime = getTime();
+	public static long time = getTime();
+	public static Vector3f lightPosition = new Vector3f(-500f, -100f, 500f);
+	public static long lastPress = (int)System.currentTimeMillis();
 
 	float mouseSensitivity = 0.05f;
-	float movementSpeed = 20.0f;
-	float joystickPovSpeed = 100.0f;
-	public float jumpFrame = 0;
+	static float movementSpeed = 20.0f;
+	static float joystickPovSpeed = 100.0f;
+	public static float jumpFrame = 0;
 	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
 	public float fallFrame = 0f;
 	public int bunnyFrame = 0;
 
 	public static boolean jumping = false;
-	public boolean falling = true;
-	public boolean left = false;
-	public boolean right = false;
-	public boolean forward = false;
-	public boolean backward = false;
+	public static boolean falling = true;
+	public static boolean left = false;
+	public static boolean right = false;
+	public static boolean forward = false;
+	public static boolean backward = false;
 	public boolean ground = false;
 	public static boolean ingameMenu = false;
+	public static boolean moved = false;
 
-	private boolean gamepad = false;
+	public static boolean gamepad = false;
 	public boolean smoothing = false;
-	private boolean debug = false;
+	public static boolean debug = false;
 	public boolean fullscreen = false;
 
 	public final int playerHeight = 10;
@@ -83,12 +79,12 @@ public class Footsteps {
 	public final float jumpDistance = 2f;
 	public final float fallIncrease = 15f;
 	public final int playerFootstepDelay = 500;
-	public float lastFps = 0f;
+	public static float lastFps = 0f;
 	public float currentTime = 0f;
-	private int currentFps = 0;
-	private float terrainBrightness = 0.1f; // brightness is directly proportional to value
+	public static int currentFps = 0;
+	public static float terrainBrightness = 0.1f; // brightness is directly proportional to value
 
-	private boolean wireframe = false;
+	public static boolean wireframe = false;
 	private boolean colorize = false;
 	private boolean textured = true;
 
@@ -106,8 +102,6 @@ public class Footsteps {
 	List<Location> terrainCap = new ArrayList<Location>();
 	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
 
-	public Joystick joystick = new Joystick(Controller.Type.STICK, Controller.Type.GAMEPAD);
-
 	public float[] skyColor = new float[]{0f, 0.7f, 0.9f, 1.1f};
 
 	public Texture grassTexture, bunnyTexture;
@@ -115,10 +109,6 @@ public class Footsteps {
 	public List<Sound> grassSounds = new ArrayList<Sound>();
 
 	public float lastGrassSound = time;
-
-	// GUI related variables
-	private static UnicodeFont font;
-	private static UnicodeFont backFont;
 
 	public static void main(String[] args){
 		new Footsteps();
@@ -180,8 +170,8 @@ public class Footsteps {
 		shaderProgram = ShaderLoader.loadShaderPair(VERTEX_SHADER, FRAGMENT_SHADER);
 		diffuseModifierUniform = glGetUniformLocation(shaderProgram, "diffuseLightIntensity");
 
-		if (joystick.isControllerConnected()){
-			System.out.println("Gamepad \"" + joystick.getControllerName() + "\" found");
+		if (GamepadHandler.joystick.isControllerConnected()){
+			System.out.println("Gamepad \"" + GamepadHandler.joystick.getControllerName() + "\" found");
 			gamepad = true;
 		}
 
@@ -436,80 +426,17 @@ public class Footsteps {
 			}
 
 			else {
-
-				boolean moved = false;
-
-				boolean movedByGamepad = false;
-
+				
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-				if (gamepad){
-					if (!joystick.pollController())
-						gamepad = false;
-				}
-
-				if (gamepad){
-					float leftStickX = (joystick.getX_LeftJoystick_Percentage() - 50) / 50f;
-					float leftStickY = (joystick.getY_LeftJoystick_Percentage() - 50) / 50f;
-					float rightStickX = (joystick.getX_RightJoystick_Percentage() - 50) / 50f;
-					float rightStickY = (joystick.getY_RightJoystick_Percentage() - 50) / 50f;
-
-					if (leftStickX > .04 || leftStickX < -.04 || leftStickY > .04 || leftStickY < -.04){
-						boolean backward = false;
-						if (leftStickY > 0)
-							backward = true;
-						int angle = Math.round(leftStickX * 90);
-						float larger = Math.abs(leftStickX);
-						if (Math.abs(leftStickY) > Math.abs(leftStickX))
-							larger = Math.abs(leftStickY);
-						if (movementSpeed * delta / 1000 < 50) // just in case
-							camera.moveCustom(angle, movementSpeed * larger * delta / 1000, backward);
-						movedByGamepad = true;
-						moved = true;
-					}
-					else
-						camera.freezeXAndZ();
-
-					if (rightStickX > .04 || rightStickX < -.04 || rightStickY > .04 || rightStickY < -.04){
-						camera.setYaw(camera.getYaw() + rightStickX * joystickPovSpeed * delta / 1000);
-						camera.setPitch(camera.getPitch() + rightStickY * joystickPovSpeed * delta / 1000);
-					}
-
-					float a = joystick.getComponentValue(Identifier.Button._0);
-					if (a > 0 && !jumping && !falling)
-						jumping = true;
-
-					float start = joystick.getComponentValue(Identifier.Button._7);
-					if (start > 0)
-						break;
-
-					float select = joystick.getComponentValue(Identifier.Button._6);
-					if (select > 0){
-						if (System.currentTimeMillis() - lastPress > 200){
-							if (debug)
-								debug = false;
-							else
-								debug = true;
-							lastPress = System.currentTimeMillis();
-						}
-					}
-
-					float x = joystick.getComponentValue(Identifier.Button._2);
-					if (x > 0){
-						if (System.currentTimeMillis() - lastPress > 200){
-							if (wireframe)
-								wireframe = false;
-							else
-								wireframe = true;
-							lastPress = System.currentTimeMillis();
-						}
-					}
-				}
 
 				if (wireframe)
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				else
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				
+				moved = false;
+				GamepadHandler.handleGamepad();
+				KeyHandler.handleKeys();
 
 				// skybox
 				if (wireframe)
@@ -532,6 +459,7 @@ public class Footsteps {
 				glEnable(GL_LIGHT1);
 				glCallList(terrainHandle);
 				glDisable(GL_LIGHT1);
+				glBindTexture(GL_TEXTURE_2D, 0);
 
 				// models
 				glTranslatef(250, 37, 250);
@@ -569,100 +497,7 @@ public class Footsteps {
 				camera.setYaw(camera.getYaw() + dx * mouseSensitivity / (delta / 60));
 				camera.setPitch(camera.getPitch() + dy * mouseSensitivity / (delta / 60));
 
-				if (!movedByGamepad){
-					if (isKeyDown(KEY_W))
-						forward = true;
-					else if (forward){
-						camera.walkForward(0);
-						forward = false;
-					}
-
-					if (isKeyDown(KEY_S))
-						backward = true;
-					else if (backward){
-						camera.walkBackward(0);
-						backward = false;
-					}
-
-					if (isKeyDown(KEY_A))
-						left = true;
-					else if (left){
-						camera.strafeLeft(0);
-						left = false;
-					}
-
-					if (isKeyDown(KEY_D))
-						right = true;
-					else if (right){
-						camera.strafeRight(0);
-						right = false;
-					}
-				}
-
-				if (isKeyDown(KEY_SPACE)){
-					if (!jumping && !falling){
-						jumping = true;
-						jumpFrame = 0;
-					}
-				}
-
-				if (isKeyDown(KEY_F)){
-					if (System.currentTimeMillis() - lastPress > 200){
-						if (wireframe)
-							wireframe = false;
-						else
-							wireframe = true;
-						lastPress = System.currentTimeMillis();
-					}
-				}			
-
-				/*if (isKeyDown(KEY_F11)){
-					if (System.currentTimeMillis() - lastPress > 500){
-						try {
-							if (Display.isFullscreen()){
-								Display.setDisplayMode(Display.getDesktopDisplayMode());
-								Display.setFullscreen(false);
-							}
-							else {
-								Display.setDisplayMode(Display.getDesktopDisplayMode());
-								Display.setDisplayModeAndFullscreen(Display.getDesktopDisplayMode());
-							}
-						}
-						catch (LWJGLException ex){
-							ex.printStackTrace();
-						}
-					}
-				}*/
-
-				if (isKeyDown(KEY_F3)){
-					if (System.currentTimeMillis() - lastPress > 200){
-						if (debug)
-							debug = false;
-						else
-							debug = true;
-						lastPress = System.currentTimeMillis();
-					}
-				}
-
-				// open menu
-				if (isKeyDown(KEY_ESCAPE)){
-					if (System.currentTimeMillis() - lastPress > 200){
-						ingameMenu = true;
-						lastPress = System.currentTimeMillis();
-
-						continue;
-					}
-				}
-
-				if (isButtonDown(1)){
-					if (System.currentTimeMillis() - lastPress > 200){
-						if (isGrabbed())
-							setGrabbed(false);
-						else if (!isGrabbed())
-							setGrabbed(true);
-						lastPress = System.currentTimeMillis();
-					}
-				}
+				
 
 				/*if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
 				camera.flyDown(movementSpeed * delta / 100f);*/
@@ -735,7 +570,7 @@ public class Footsteps {
 					ground = true;
 				}
 
-				if (!movedByGamepad){
+				if (!moved){
 					if (forward && left){
 						camera.forwardLeft(movementSpeed * delta / 1000);
 						moved = true;
@@ -797,177 +632,5 @@ public class Footsteps {
 		AL.destroy();
 		glDeleteProgram(shaderProgram);
 		Display.destroy();
-	}
-
-	private static FloatBuffer asFloatBuffer(float[] f){
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(f.length);
-		buffer.put(f);
-		buffer.flip();
-		buffer.order();
-		return buffer;
-	}
-
-	public void moveCameraSmooth(Location oldLoc, Location newLoc, int stages){
-		float xDiff = newLoc.getX() - oldLoc.getX();
-		float yDiff = newLoc.getY() - oldLoc.getY();
-		float zDiff = newLoc.getZ() - oldLoc.getZ();
-
-		float xPerStage = xDiff / stages;
-		float yPerStage = yDiff / stages;
-		float zPerStage = zDiff / stages;
-
-		for (int i = 0; i < stages; i++){
-			camera.position.x += xPerStage;
-			camera.position.y += yPerStage;
-			camera.position.z += zPerStage;
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private static void setUpFont(){
-		float size = 28F;
-		Font awtFont = new Font("Verdana", Font.BOLD, (int)size);
-		font = new UnicodeFont(awtFont.deriveFont(0, size));
-		font.addAsciiGlyphs();
-		ColorEffect e = new ColorEffect();
-		e.setColor(Color.WHITE);
-		font.getEffects().add(e);
-		backFont = new UnicodeFont(awtFont.deriveFont(0, size));
-		backFont.addAsciiGlyphs();
-		ColorEffect e2 = new ColorEffect();
-		e.setColor(Color.BLACK);
-		backFont.getEffects().add(e2);
-		try {
-			font.loadGlyphs();
-			backFont.loadGlyphs();
-		}
-		catch (Exception ex){
-			ex.printStackTrace();
-		}
-	}
-
-	public void drawString(int x, int y, String str, boolean shadow){
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-		glDisable(GL_LIGHTING);
-		if (wireframe)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		if (shadow)
-			backFont.drawString(x - 3, y - 3, str);
-		font.drawString(x, y, str);
-		if (wireframe)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glEnable(GL_LIGHTING);
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-	}
-
-	public void pushPopMatrix(){
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1 );
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-	}
-
-	public BufferedImage scaleImage(BufferedImage img, int width, int height){
-		BufferedImage newImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = (Graphics2D)newImg.getGraphics();
-		g.scale(((double)width / (double)img.getWidth()), ((double)height / (double)img.getHeight()));
-		g.drawImage(img, 0, 0, null);
-		g.dispose();
-		return newImg;
-	}
-
-	public ByteBuffer asByteBuffer(BufferedImage img){
-		ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
-		for(int y = 0; y < img.getHeight(); y++){
-			for(int x = 0; x < img.getWidth(); x++){
-				buffer.put((byte)(new Color(img.getRGB(x, y), true).getRed() & 0xFF));
-				buffer.put((byte)(new Color(img.getRGB(x, y), true).getGreen() & 0xFF));
-				buffer.put((byte)(new Color(img.getRGB(x, y), true).getBlue() & 0xFF));
-				buffer.put((byte)(new Color(img.getRGB(x, y), true).getAlpha() & 0xFF));
-			}
-		}
-		buffer.flip();
-		return buffer; 
-	}
-
-	public long getTime() {
-		return (Sys.getTime() * 1000) / Sys.getTimerResolution();
-	}
-
-	public void updateFps(){
-		if (time - lastFps > 1000){
-			currentFps = (int)(1000 / delta);
-			lastFps = time;
-		}
-	}
-
-	public Vector3f getNormal(Vector3f p1, Vector3f p2, Vector3f p3){
-		Vector3f v = new Vector3f();
-
-		Vector3f calU = new Vector3f(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-		Vector3f calV = new Vector3f(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
-
-		v.setX(calU.getY() * calV.getZ() - calU.getZ() * calV.getY());
-		v.setY(calU.getZ() * calV.getX() - calU.getX() * calV.getZ());
-		v.setZ(calU.getX() * calV.getY() - calU.getY() * calV.getX());
-
-		return (Vector3f)v.normalise();
-	}
-
-	public void drawModel(Model m){
-		//Texture t = null;
-		//Material lastMaterial = null;
-		for (Face f : m.faces){
-			/*if (f.material.getTexture() != null){
-				if (f.material != lastMaterial){
-					lastMaterial = f.material;
-					try {
-						t = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream(f.material.getTexture()));
-						t.bind();
-					}
-					catch (Exception ex){
-						ex.printStackTrace();
-					}
-				}
-			}*/
-
-			//Vector3f t1 = m.textures.get((int)f.texture.x - 1);
-			//glVertex3f(t1.x, t1.y, t1.z);
-			Vector3f n1 = m.normals.get((int)f.normal.x - 1);
-			glNormal3f(n1.x, n1.y, n1.z);
-			Vector3f v1 = m.vertices.get((int)f.vertex.x - 1);
-			glVertex3f(v1.x, v1.y, v1.z);
-
-			//Vector3f t2 = m.textures.get((int)f.texture.y - 1);
-			//glVertex3f(t2.x, t2.y, t2.z);
-			Vector3f n2 = m.normals.get((int)f.normal.y - 1);
-			glNormal3f(n2.x, n2.y, n2.z);
-			Vector3f v2 = m.vertices.get((int)f.vertex.y - 1);
-			glVertex3f(v2.x, v2.y, v2.z);
-
-			//Vector3f t3 = m.textures.get((int)f.texture.z - 1);
-			//glVertex3f(t3.x, t3.y, t3.z);
-			Vector3f n3 = m.normals.get((int)f.normal.z - 1);
-			glNormal3f(n3.x, n3.y, n3.z);
-			Vector3f v3 = m.vertices.get((int)f.vertex.z - 1);
-			glVertex3f(v3.x, v3.y, v3.z);
-		}
 	}
 }
