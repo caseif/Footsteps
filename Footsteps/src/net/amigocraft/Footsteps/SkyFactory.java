@@ -109,6 +109,8 @@ public class SkyFactory {
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_LIGHTING);
 			glEnable(GL_BLEND);
+			
+			glBindTexture(GL_TEXTURE_2D, 0);
 
 			glPopAttrib();
 		}

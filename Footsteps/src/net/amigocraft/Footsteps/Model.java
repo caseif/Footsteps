@@ -10,17 +10,8 @@ public class Model {
 	public List<Vector3f> vertices = new ArrayList<Vector3f>();
 	public List<Vector3f> normals = new ArrayList<Vector3f>();
 	public List<Face> faces = new ArrayList<Face>();
-
-	public Model clone(){
-		Model m = new Model();
-		for (Vector3f v : vertices)
-			m.vertices.add(v);
-		for (Vector3f n : normals)
-			m.normals.add(n);
-		for (Face f : faces)
-			m.faces.add(f);
-		return m;
-	}
+	public List<Vector3f> textures = new ArrayList<Vector3f>();
+	public List<float[]> textureCoords = new ArrayList<float[]>();
 	
 	public boolean contains(Location l){
 		for (Vector3f v : vertices){

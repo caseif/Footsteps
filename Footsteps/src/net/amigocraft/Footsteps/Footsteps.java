@@ -95,7 +95,7 @@ public class Footsteps {
 	public int buttonWidth = 350;
 	public int buttonHeight = 50;
 
-	public static Model bunnyModel;
+	public static Model bunnyModel, wtModel;
 
 	private static final String VERTEX_SHADER = "/net/amigocraft/Footsteps/shaders/shader.vs";
 	private static final String FRAGMENT_SHADER = "/net/amigocraft/Footsteps/shaders/shader.fs";
@@ -128,7 +128,7 @@ public class Footsteps {
 		try {
 			Display.setDisplayMode(new DisplayMode(Display.getDesktopDisplayMode().getWidth() - 20, Display.getDesktopDisplayMode().getHeight() - 100));
 			Display.setTitle("Footsteps");
-			Display.setVSyncEnabled(true);
+			//Display.setVSyncEnabled(true);
 			ByteBuffer[] icons = null;
 			if (System.getProperty("os.name").startsWith("Windows")){
 				icons = new ByteBuffer[2];
@@ -222,27 +222,38 @@ public class Footsteps {
 			glMaterialf(GL_BACK, GL_SHININESS, 10f);
 			glColor3f(0.45f, 0.35f, 0.1f);
 			try {
-				bunnyModel = ObjLoader.loadModel(this.getClass().getClassLoader().getResourceAsStream("models/bunny.obj"));
+				bunnyModel = ObjLoader.loadModel("models/bunny.obj");
 			}
 			catch (Exception ex){
 				ex.printStackTrace();
 				Display.destroy();
 				System.exit(1);
 			}
-			for (Face f : bunnyModel.faces){
-				Vector3f n1 = bunnyModel.normals.get((int)f.normal.x - 1);
-				glNormal3f(n1.x, n1.y, n1.z);
-				Vector3f v1 = bunnyModel.vertices.get((int)f.vertex.x - 1);
-				glVertex3f(v1.x, v1.y, v1.z);
-				Vector3f n2 = bunnyModel.normals.get((int)f.normal.y - 1);
-				glNormal3f(n2.x, n2.y, n2.z);
-				Vector3f v2 = bunnyModel.vertices.get((int)f.vertex.y - 1);
-				glVertex3f(v2.x, v2.y, v2.z);
-				Vector3f n3 = bunnyModel.normals.get((int)f.normal.z - 1);
-				glNormal3f(n3.x, n3.y, n3.z);
-				Vector3f v3 = bunnyModel.vertices.get((int)f.vertex.z - 1);
-				glVertex3f(v3.x, v3.y, v3.z);
+			drawModel(bunnyModel);
+			glEnd();
+
+			glDisable(GL_CULL_FACE);
+		}
+		glEndList();
+
+		int wtHandle = glGenLists(1);
+		glNewList(wtHandle, GL_COMPILE);
+		{
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			glBegin(GL_TRIANGLES);
+			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
+			glMaterialf(GL_BACK, GL_SHININESS, 10f);
+			glColor3f(0.45f, 0.35f, 0.1f);
+			try {
+				wtModel = ObjLoader.loadModel("models/Walkie_Talkie.obj");
 			}
+			catch (Exception ex){
+				ex.printStackTrace();
+				Display.destroy();
+				System.exit(1);
+			}
+			drawModel(wtModel);
 			glEnd();
 
 			glDisable(GL_CULL_FACE);
@@ -508,11 +519,13 @@ public class Footsteps {
 				glRotatef(camera.getPitch() - 13, 1, 0, 0);
 				glRotatef(camera.getYaw(), 0, 1, 0);
 				glRotatef(5, 0, 0, 1);
-				//glTranslatef(0f, -0.15f, 0f);
 				glCallList(SkyFactory.getHandle());
 				glPopMatrix();
 				if (wireframe)
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				//glBindTexture(GL_TEXTURE_2D, 0);
+
+				drawString(0, 0, " ", false);
 
 				// terrain
 				grassTexture.bind();
@@ -523,13 +536,13 @@ public class Footsteps {
 				// models
 				glTranslatef(250, 37, 250);
 				glRotatef(bunnyFrame, 0f, 1f, 0f);
+				glScalef(15f, 15f, 15f);
 				bunnyFrame += 1;
-				bunnyTexture.bind();
 				glUseProgram(shaderProgram);
 				glUniform1f(diffuseModifierUniform, 10f);
 				glEnable(GL_LIGHT0);
 				glEnable(GL_CULL_FACE);
-				glCallList(bunnyHandle);
+				glCallList(wtHandle);
 				glDisable(GL_CULL_FACE);
 				glDisable(GL_LIGHT0);
 				glUseProgram(0);
@@ -603,20 +616,23 @@ public class Footsteps {
 					}
 				}			
 
-				/*if (Keyboard.isKeyDown(Keyboard.KEY_F11)){
-				if (System.currentTimeMillis() - lastPress > 500){
-					try {
-						if (Display.isFullscreen())
-							Display.setFullscreen(false);
-						else {
-							Display.setDisplayModeAndFullscreen(Display.getDesktopDisplayMode());
+				/*if (isKeyDown(KEY_F11)){
+					if (System.currentTimeMillis() - lastPress > 500){
+						try {
+							if (Display.isFullscreen()){
+								Display.setDisplayMode(Display.getDesktopDisplayMode());
+								Display.setFullscreen(false);
+							}
+							else {
+								Display.setDisplayMode(Display.getDesktopDisplayMode());
+								Display.setDisplayModeAndFullscreen(Display.getDesktopDisplayMode());
+							}
+						}
+						catch (LWJGLException ex){
+							ex.printStackTrace();
 						}
 					}
-					catch (LWJGLException ex){
-						ex.printStackTrace();
-					}
-				}
-			}*/
+				}*/
 
 				if (isKeyDown(KEY_F3)){
 					if (System.currentTimeMillis() - lastPress > 200){
@@ -834,7 +850,7 @@ public class Footsteps {
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
-		glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1 );
+		glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1);
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
@@ -847,6 +863,21 @@ public class Footsteps {
 		if (wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glEnable(GL_LIGHTING);
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+	}
+
+	public void pushPopMatrix(){
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1 );
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
 		glMatrixMode(GL_MODELVIEW);
@@ -898,5 +929,45 @@ public class Footsteps {
 		v.setZ(calU.getX() * calV.getY() - calU.getY() * calV.getX());
 
 		return (Vector3f)v.normalise();
+	}
+
+	public void drawModel(Model m){
+		//Texture t = null;
+		//Material lastMaterial = null;
+		for (Face f : m.faces){
+			/*if (f.material.getTexture() != null){
+				if (f.material != lastMaterial){
+					lastMaterial = f.material;
+					try {
+						t = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream(f.material.getTexture()));
+						t.bind();
+					}
+					catch (Exception ex){
+						ex.printStackTrace();
+					}
+				}
+			}*/
+
+			//Vector3f t1 = m.textures.get((int)f.texture.x - 1);
+			//glVertex3f(t1.x, t1.y, t1.z);
+			Vector3f n1 = m.normals.get((int)f.normal.x - 1);
+			glNormal3f(n1.x, n1.y, n1.z);
+			Vector3f v1 = m.vertices.get((int)f.vertex.x - 1);
+			glVertex3f(v1.x, v1.y, v1.z);
+
+			//Vector3f t2 = m.textures.get((int)f.texture.y - 1);
+			//glVertex3f(t2.x, t2.y, t2.z);
+			Vector3f n2 = m.normals.get((int)f.normal.y - 1);
+			glNormal3f(n2.x, n2.y, n2.z);
+			Vector3f v2 = m.vertices.get((int)f.vertex.y - 1);
+			glVertex3f(v2.x, v2.y, v2.z);
+
+			//Vector3f t3 = m.textures.get((int)f.texture.z - 1);
+			//glVertex3f(t3.x, t3.y, t3.z);
+			Vector3f n3 = m.normals.get((int)f.normal.z - 1);
+			glNormal3f(n3.x, n3.y, n3.z);
+			Vector3f v3 = m.vertices.get((int)f.vertex.z - 1);
+			glVertex3f(v3.x, v3.y, v3.z);
+		}
 	}
 }
