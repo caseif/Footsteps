@@ -2,7 +2,7 @@ package net.amigocraft.Footsteps;
 
 import java.util.Random;
 
-import org.lwjgl.opengl.GL11;
+import static org.lwjgl.opengl.GL11.*;
 import org.lwjgl.util.vector.Vector3f;
 
 public class Camera {
@@ -14,10 +14,16 @@ public class Camera {
 	//the rotation around the X axis of the camera
 	public float pitch = 0.0f;
 
-	private float pitchFade = 10f;
-	private float yawFade = 10f;
+	private float pitchOffset = 0f;
+	private float yawOffset = 0f;
 
 	private boolean moved = false;
+
+	private float moveTick = 200f;
+	private float pitchDir = 0f;
+	private float yawDir = 0f;
+	private final float moveDistance = 1.5f;
+	private final float moveFrames = 50f;
 
 	public Camera(float x, float y, float z){
 		position = new Vector3f(x * -1f, y * -1f, z * -1f);
@@ -268,29 +274,71 @@ public class Camera {
 		if (!Footsteps.ingameMenu){
 
 			if (!moved){
-				Random rand = new Random(10);
-				pitch += pitchFade / 5 * rand.nextFloat();
-				if (pitchFade > 0)
-					pitchFade -= Footsteps.delta / 50 * rand.nextFloat();
-				else
-					pitchFade += Footsteps.delta / 50 * rand.nextFloat();
+				Random rand = new Random();
 
+				if (moveTick >= moveFrames){
+					if (rand.nextInt(9) == 0){
+						pitchDir = rand.nextInt(2);
+						if (pitchDir != 2)
+							yawDir = rand.nextInt(2);
+						else
+							yawDir = rand.nextInt(1);
 
-				yaw += yawFade / 5 * rand.nextFloat();
-				if (yawFade > 0)
-					yawFade -= Footsteps.delta / 50 * rand.nextFloat();
-				else
-					yawFade += Footsteps.delta / 50 * rand.nextFloat();
+						if (pitchDir == 0 && pitchOffset < -moveDistance)
+							pitchDir = 1;
+						else if (pitchDir == 1 && pitchOffset > moveDistance)
+							pitchDir = 0;
+
+						if (yawDir == 0 && yawOffset < -moveDistance)
+							yawDir = 1;
+						else if (yawDir == 1 && yawOffset > moveDistance)
+							yawDir = 0;
+
+						moveTick = 0;
+					}
+					shake();
+				}
+				else {
+					shake();
+				}
+
 			}
 
 			moved = false;
 
 			position = add(position, velocity, true);
-			GL11.glRotatef(pitch, 1.0f, 0.0f, 0.0f);
-			GL11.glRotatef(yaw, 0.0f, 1.0f, 0.0f);
-			GL11.glTranslatef(position.x, position.y, position.z);
+			glRotatef(pitch, 1.0f, 0.0f, 0.0f);
+			glRotatef(yaw, 0.0f, 1.0f, 0.0f);
+			glTranslatef(position.x, position.y, position.z);
 
 		}
+	}
+
+	private void shake(){
+
+		float moveDis = moveDistance / moveFrames;
+
+		if (pitchDir == 0f){
+			pitch -= moveDis;
+			pitchOffset -= moveDis;
+		}
+		else if (pitchDir == 1f){
+			pitch += moveDis;
+			pitchOffset += moveDis;
+		}
+		if (yawDir == 0f){
+			yaw -= moveDis;
+			yawOffset -= moveDis;
+		}
+		else if (yawDir == 1f){
+			yaw += moveDis;
+			yawOffset += moveDis;
+		}
+
+		if (pitchOffset >= moveDistance || pitchOffset <= -moveDistance || yawOffset >= moveDistance || yawOffset <= -moveDistance)
+			moveTick = 200f;
+		else
+			moveTick += 1;
 	}
 
 	public Vector3f add(Vector3f vec, float x, float y, float z, boolean apply){

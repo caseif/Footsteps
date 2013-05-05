@@ -77,7 +77,7 @@ public class Footsteps {
 	public static float lastFps = 0f;
 	public float currentTime = 0f;
 	public static int currentFps = 0;
-	public static float terrainBrightness = 0.1f; // brightness is directly proportional to value
+	public static float terrainBrightness = 0.15f; // brightness is directly proportional to value
 
 	public static boolean wireframe = false;
 	private boolean colorize = false;
@@ -384,6 +384,8 @@ public class Footsteps {
 				GamepadHandler.handleGamepad();
 				KeyHandler.handleKeys();
 
+				glLight(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
+				
 				// skybox
 				if (wireframe)
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -410,11 +412,11 @@ public class Footsteps {
 				// models
 				glTranslatef(250, 37, 250);
 				glRotatef(bunnyFrame, 0f, 1f, 0f);
-				glScalef(15f, 15f, 15f);
 				bunnyFrame += 1;
 				glUseProgram(shaderProgram);
 				glUniform1f(diffuseModifierUniform, 10f);
 				glEnable(GL_LIGHT0);
+				glScalef(15f, 15f, 15f);
 				glEnable(GL_CULL_FACE);
 				glCallList(wtHandle);
 				glDisable(GL_CULL_FACE);
@@ -563,8 +565,6 @@ public class Footsteps {
 				glLoadIdentity();
 
 				camera.lookThrough();
-
-				glLight(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
 
 			}
 
