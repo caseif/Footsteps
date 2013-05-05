@@ -19,7 +19,6 @@ public class KeyHandler {
 			if (isKeyDown(KEY_W))
 				Footsteps.forward = true;
 			else if (Footsteps.forward){
-				System.out.println("not forward");
 				Footsteps.camera.walkForward(0);
 				Footsteps.forward = false;
 			}
