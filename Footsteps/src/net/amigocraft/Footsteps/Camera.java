@@ -319,19 +319,19 @@ public class Camera {
 		float moveDis = moveDistance / moveFrames;
 
 		if (pitchDir == 0f){
-			pitch -= moveDis;
+			pitch -= moveDis * Footsteps.delta / 40;
 			pitchOffset -= moveDis;
 		}
 		else if (pitchDir == 1f){
-			pitch += moveDis;
+			pitch += moveDis * Footsteps.delta / 40;
 			pitchOffset += moveDis;
 		}
 		if (yawDir == 0f){
-			yaw -= moveDis;
+			yaw -= moveDis * Footsteps.delta / 40;
 			yawOffset -= moveDis;
 		}
 		else if (yawDir == 1f){
-			yaw += moveDis;
+			yaw += moveDis * Footsteps.delta / 40;
 			yawOffset += moveDis;
 		}
 
