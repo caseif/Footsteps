@@ -1,10 +1,10 @@
-package net.amigocraft.Footsteps;
+package net.amigocraft.Footsteps.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import net.amigocraft.Footsteps.ShaderLoader;
+import net.amigocraft.Footsteps.util.ShaderLoader;
 
 import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL20.*;

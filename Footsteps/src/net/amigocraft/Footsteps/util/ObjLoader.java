@@ -1,4 +1,4 @@
-package net.amigocraft.Footsteps;
+package net.amigocraft.Footsteps.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,6 +6,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+
+import net.amigocraft.Footsteps.Face;
+import net.amigocraft.Footsteps.Footsteps;
+import net.amigocraft.Footsteps.Material;
+import net.amigocraft.Footsteps.Model;
 
 import org.lwjgl.util.vector.Vector3f;
 
@@ -69,6 +74,7 @@ public class ObjLoader {
 						i += 1;
 					}
 					texPath += mtlLine.split(" ")[1];
+					System.out.println(texPath);
 					currentMat.setTexture(texPath);
 					mats.add(currentMat);
 					currentMat = new Material();

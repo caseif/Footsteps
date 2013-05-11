@@ -1,4 +1,4 @@
-package net.amigocraft.Footsteps;
+package net.amigocraft.Footsteps.util;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -9,6 +9,8 @@ import javax.imageio.ImageIO;
 
 import static net.amigocraft.Footsteps.util.BufferUtil.*;
 import static net.amigocraft.Footsteps.util.ImageUtil.*;
+
+import net.amigocraft.Footsteps.Footsteps;
 
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;

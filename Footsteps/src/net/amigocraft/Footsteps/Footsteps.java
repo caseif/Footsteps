@@ -18,6 +18,9 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import net.amigocraft.Footsteps.util.SetupDisplay;
+import net.amigocraft.Footsteps.util.ShaderLoader;
+
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.openal.AL;
@@ -25,6 +28,9 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.util.vector.Vector3f;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
+
+import com.obj.Vertex;
+import com.obj.WavefrontObject;
 
 /**
  * @title Footsteps
@@ -86,7 +92,7 @@ public class Footsteps {
 	public int buttonWidth = 350;
 	public int buttonHeight = 50;
 
-	public static Model bunnyModel, wtModel;
+	public static WavefrontObject bunnyModel, wtModel;
 
 	private static final String VERTEX_SHADER = "/net/amigocraft/Footsteps/shaders/shader.vs";
 	private static final String FRAGMENT_SHADER = "/net/amigocraft/Footsteps/shaders/shader.fs";
@@ -124,7 +130,7 @@ public class Footsteps {
 		// textures
 		try {
 			grassTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/grass.png"));
-			bunnyTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/rabbitfur.png"));
+			//bunnyTexture = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/rabbitfur.png"));
 		}
 		catch (Exception ex){
 			ex.printStackTrace();
@@ -157,15 +163,8 @@ public class Footsteps {
 			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
 			glMaterialf(GL_BACK, GL_SHININESS, 10f);
 			glColor3f(0.45f, 0.35f, 0.1f);
-			try {
-				bunnyModel = ObjLoader.loadModel("models/bunny.obj");
-			}
-			catch (Exception ex){
-				ex.printStackTrace();
-				Display.destroy();
-				System.exit(1);
-			}
-			drawModel(bunnyModel);
+			bunnyModel = new WavefrontObject("/models/bunny.obj");
+			//drawModel(bunnyModel);
 			glEnd();
 
 			glDisable(GL_CULL_FACE);
@@ -181,7 +180,7 @@ public class Footsteps {
 			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
 			glMaterialf(GL_BACK, GL_SHININESS, 10f);
 			glColor3f(0.45f, 0.35f, 0.1f);
-			try {
+			/*try {
 				wtModel = ObjLoader.loadModel("models/Walkie_Talkie.obj");
 			}
 			catch (Exception ex){
@@ -189,7 +188,9 @@ public class Footsteps {
 				Display.destroy();
 				System.exit(1);
 			}
-			drawModel(wtModel);
+			drawModel(wtModel);*/
+			wtModel = new WavefrontObject("/models/Walkie_Talkie.obj", 15f, new Vertex(250, 37, 250), new Vertex(0, 0, 0));
+			
 			glEnd();
 
 			glDisable(GL_CULL_FACE);
@@ -398,7 +399,6 @@ public class Footsteps {
 				glPopMatrix();
 				if (wireframe)
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				//glBindTexture(GL_TEXTURE_2D, 0);
 
 				drawString(0, 0, " ", false);
 
@@ -410,15 +410,15 @@ public class Footsteps {
 				glBindTexture(GL_TEXTURE_2D, 0);
 
 				// models
-				glTranslatef(250, 37, 250);
-				glRotatef(bunnyFrame, 0f, 1f, 0f);
+				//glTranslatef(250, 37, 250);
+				//glRotatef(bunnyFrame, 0f, 1f, 0f);
 				bunnyFrame += 1;
 				glUseProgram(shaderProgram);
 				glUniform1f(diffuseModifierUniform, 10f);
 				glEnable(GL_LIGHT0);
-				glScalef(15f, 15f, 15f);
+				//glScalef(15f, 15f, 15f);
 				glEnable(GL_CULL_FACE);
-				glCallList(wtHandle);
+				glCallList(bunnyHandle);
 				glDisable(GL_CULL_FACE);
 				glDisable(GL_LIGHT0);
 				glUseProgram(0);

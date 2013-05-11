@@ -54,7 +54,6 @@ public class SkyFactory {
 			glEnd();
 
 			// left
-			glBindTexture(GL_TEXTURE_2D, skybox.getTextureID());
 			glBegin(GL_QUADS);
 			glTexCoord2f(0f, 0.5f);
 			glVertex3f(0.5f, 0.5f, 0.5f);
@@ -67,7 +66,6 @@ public class SkyFactory {
 			glEnd();
 
 			// back
-			glBindTexture(GL_TEXTURE_2D, skybox.getTextureID());
 			glBegin(GL_QUADS);
 			glTexCoord2f(0.75f, 0.5f);
 			glVertex3f(-0.5f, 0.5f, 0.5f);
@@ -81,7 +79,6 @@ public class SkyFactory {
 			glEnd();
 
 			// right
-			glBindTexture(GL_TEXTURE_2D, skybox.getTextureID());
 			glBegin(GL_QUADS);
 			glTexCoord2f(0.5f, 0.5f);
 			glVertex3f(-0.5f, 0.5f, -0.5f);
@@ -94,7 +91,6 @@ public class SkyFactory {
 			glEnd();
 
 			// top
-			glBindTexture(GL_TEXTURE_2D, skybox.getTextureID());
 			glBegin(GL_QUADS);
 			glTexCoord2f(0.25f, 0f);
 			glVertex3f(0.5f, 0.5f, 0.5f);
