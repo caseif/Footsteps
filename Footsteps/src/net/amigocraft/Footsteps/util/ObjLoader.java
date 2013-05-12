@@ -176,6 +176,11 @@ public class ObjLoader {
 					}
 				}
 			}
+			System.out.println("Loaded model " + path.split("/")[path.split("/").length - 1]);
+			System.out.println(m.vertices.size() + " vertices");
+			System.out.println(m.normals.size() + " normals");
+			System.out.println(m.faces.size() + " faces");
+			System.out.println(mats.size() + " materials");
 			reader.close();
 
 		}

@@ -430,15 +430,24 @@ public class Footsteps {
 				glBindTexture(GL_TEXTURE_2D, 0);
 
 				// models
-				glTranslatef(250, 38, 250);
-				//glRotatef(bunnyFrame, 0f, 1f, 0f);
-				//glScalef(15f, 15f, 15f);
+				float xOff = ((float)Math.sin(Math.toRadians(camera.getYaw())) * 1) - 3;
+				float zOff = ((float)Math.cos(Math.toRadians(camera.getYaw())) * 1) + 5;
+				glTranslatef(-camera.getX() + xOff, -camera.getY() - 5, (-camera.getZ() - zOff));
+				glRotatef(90f, 1f, 0f, 0f);
+				//glRotatef(camera.getYaw(), 0f, 1f, 0f);
+				/*System.out.println("x: " + (-camera.getX() + xOff));
+				System.out.println("y: " + -camera.getY());
+				System.out.println("z: " + (-camera.getZ() - zOff));
+				System.out.println("xOff: " + (xOff * 3));
+				System.out.println("zOff: " + (zOff * 3));*/
+				glRotatef(90f, 0f, 0f, 1f);
+				glScalef(5f, 5f, 5f);
 				bunnyFrame += 1;
 				glUseProgram(shaderProgram);
 				glUniform1f(diffuseModifierUniform, 10f);
 				glEnable(GL_LIGHT0);
 				glEnable(GL_CULL_FACE);
-				glCallList(bunnyHandle);
+				//glCallList(armHandle);
 				glDisable(GL_CULL_FACE);
 				glDisable(GL_LIGHT0);
 				glUseProgram(0);

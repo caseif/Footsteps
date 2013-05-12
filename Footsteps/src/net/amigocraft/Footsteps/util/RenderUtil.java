@@ -41,7 +41,19 @@ public class RenderUtil {
 		
 		String currentMaterial = "";
 		
+		boolean quads = false;
+		
 		for (Face f : m.faces){
+			if (f.vertex.length == 4 && !quads){
+				glEnd();
+				glBegin(GL_QUADS);
+				quads = true;
+			}
+			else if (f.vertex.length == 3 && quads){
+				glEnd();
+				glBegin(GL_TRIANGLES);
+				quads = false;
+			}
 			if (f.texture != null){
 				try {
 					if (currentMaterial != f.material.getName()){
