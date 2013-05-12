@@ -115,7 +115,7 @@ public class Footsteps {
 	public Footsteps(){
 
 		SetupDisplay.setupDisplay();
-		
+
 		shaderProgram = ShaderLoader.loadShaderPair(VERTEX_SHADER, FRAGMENT_SHADER);
 		diffuseModifierUniform = glGetUniformLocation(shaderProgram, "diffuseLightIntensity");
 
@@ -194,7 +194,7 @@ public class Footsteps {
 			glDisable(GL_CULL_FACE);
 		}
 		glEndList();
-		
+
 		int armHandle = glGenLists(1);
 		glNewList(armHandle, GL_COMPILE);
 		{
@@ -393,20 +393,20 @@ public class Footsteps {
 			}
 
 			else {
-				
+
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 				if (wireframe)
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				else
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				
+
 				moved = false;
 				GamepadHandler.handleGamepad();
 				KeyHandler.handleKeys();
 
 				glLight(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
-				
+
 				// skybox
 				if (wireframe)
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -462,10 +462,11 @@ public class Footsteps {
 							runtime.freeMemory() / mb + "mb free", true);
 				}
 
-				camera.setYaw(camera.getYaw() + dx * mouseSensitivity / (delta / 60));
-				camera.setPitch(camera.getPitch() + dy * mouseSensitivity / (delta / 60));
+				if (Mouse.isGrabbed()){
+					camera.setYaw(camera.getYaw() + dx * mouseSensitivity / (delta / 60));
+					camera.setPitch(camera.getPitch() + dy * mouseSensitivity / (delta / 60));
+				}
 
-				
 
 				/*if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
 				camera.flyDown(movementSpeed * delta / 100f);*/

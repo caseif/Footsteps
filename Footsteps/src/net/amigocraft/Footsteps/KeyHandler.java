@@ -13,9 +13,11 @@ import static org.lwjgl.input.Mouse.isButtonDown;
 import static org.lwjgl.input.Mouse.isGrabbed;
 import static org.lwjgl.input.Mouse.setGrabbed;
 
+import org.lwjgl.input.Mouse;
+
 public class KeyHandler {
 	public static void handleKeys(){
-		if (!Footsteps.moved){
+		if (!Footsteps.moved && Mouse.isGrabbed()){
 			if (isKeyDown(KEY_W))
 				Footsteps.forward = true;
 			else if (Footsteps.forward){
