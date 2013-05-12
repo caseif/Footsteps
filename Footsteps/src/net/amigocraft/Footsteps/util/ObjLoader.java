@@ -74,7 +74,6 @@ public class ObjLoader {
 						i += 1;
 					}
 					texPath += mtlLine.split(" ")[1];
-					System.out.println(texPath);
 					currentMat.setTexture(texPath);
 					mats.add(currentMat);
 					currentMat = new Material();
@@ -116,28 +115,56 @@ public class ObjLoader {
 				}
 				else if (line.startsWith("f ")){
 					// face
-					Vector3f vertexIndices = new Vector3f(
-							Float.valueOf(array[1].split("/")[0]),
-							Float.valueOf(array[2].split("/")[0]),
-							Float.valueOf(array[3].split("/")[0]));
-					Vector3f textureIndices = new Vector3f();
-					if (!array[1].split("/")[1].isEmpty() && !array[2].split("/")[1].isEmpty() && !array[3].split("/")[1].isEmpty()){
-						textureIndices = new Vector3f(
-								Float.valueOf(array[1].split("/")[1]),
-								Float.valueOf(array[2].split("/")[1]),
-								Float.valueOf(array[3].split("/")[1]));
-						tex = true;
+					if (array.length == 4){ //triangular faces
+						int[] vertexIndices = new int[]{
+								Integer.valueOf(array[1].split("/")[0]),
+								Integer.valueOf(array[2].split("/")[0]),
+								Integer.valueOf(array[3].split("/")[0])};
+						int[] textureIndices = null;
+						if (!array[1].split("/")[1].isEmpty() && !array[2].split("/")[1].isEmpty() && !array[3].split("/")[1].isEmpty()){
+							textureIndices = new int[]{
+									Integer.valueOf(array[1].split("/")[1]),
+									Integer.valueOf(array[2].split("/")[1]),
+									Integer.valueOf(array[3].split("/")[1])};
+							tex = true;
+						}
+						int[] normalIndices = new int[]{
+								Integer.valueOf(array[1].split("/")[2]),
+								Integer.valueOf(array[2].split("/")[2]),
+								Integer.valueOf(array[3].split("/")[2])};
+						if (tex && material){
+							m.faces.add(new Face(vertexIndices, normalIndices, textureIndices, currentMat));
+						}
+						else {
+							m.faces.add(new Face(vertexIndices, normalIndices));
+						}
 					}
-					Vector3f normalIndices = new Vector3f(
-							Float.valueOf(array[1].split("/")[2]),
-							Float.valueOf(array[2].split("/")[2]),
-							Float.valueOf(array[3].split("/")[2]));
-					if (tex && material){
-						m.faces.add(new Face(vertexIndices, normalIndices, textureIndices, currentMat));
-						m.textures.add(textureIndices);
+					else if (array.length == 5){ //quadrilateral faces
+						int[] vertexIndices = new int[]{
+								Integer.valueOf(array[1].split("/")[0]),
+								Integer.valueOf(array[2].split("/")[0]),
+								Integer.valueOf(array[3].split("/")[0]),
+								Integer.valueOf(array[4].split("/")[0])};
+						int[] textureIndices = null;
+						if (!array[1].split("/")[1].isEmpty() && !array[2].split("/")[1].isEmpty() && !array[3].split("/")[1].isEmpty()){
+							textureIndices = new int[]{
+									Integer.valueOf(array[1].split("/")[1]),
+									Integer.valueOf(array[2].split("/")[1]),
+									Integer.valueOf(array[3].split("/")[1]),
+									Integer.valueOf(array[4].split("/")[1])};
+							tex = true;
+						}
+						int[] normalIndices = new int[]{
+								Integer.valueOf(array[1].split("/")[2]),
+								Integer.valueOf(array[2].split("/")[2]),
+								Integer.valueOf(array[3].split("/")[2]),
+								Integer.valueOf(array[4].split("/")[2])};
+						if (tex && material){
+							m.faces.add(new Face(vertexIndices, normalIndices, textureIndices, currentMat));
+						}
+						else
+							m.faces.add(new Face(vertexIndices, normalIndices));
 					}
-					else
-						m.faces.add(new Face(vertexIndices, normalIndices));
 				}
 				else if (line.startsWith("usemtl ")){
 					for (Material mat : mats){

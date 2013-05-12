@@ -3,6 +3,7 @@ package net.amigocraft.Footsteps.util;
 import static org.lwjgl.opengl.GL11.*;
 import java.awt.Color;
 import java.awt.Font;
+import java.io.IOException;
 
 import net.amigocraft.Footsteps.Face;
 import net.amigocraft.Footsteps.Footsteps;
@@ -13,12 +14,7 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.util.vector.Vector3f;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
-import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
-
-import com.obj.TextureCoordinate;
-import com.obj.Vertex;
-import com.obj.WavefrontObject;
 
 public class RenderUtil {
 
@@ -39,25 +35,41 @@ public class RenderUtil {
 		return (Vector3f)v.normalise();
 	}
 
-	public static void drawModel(WavefrontObject m){
+	public static void drawModel(Model m){
 
 		glEnable(GL_NORMALIZE);
-
-		int i = 0;
-		for (Vertex v : m.getVertices()){
-			if (m.getCurrentMaterial() != null && m.getTextures() != null){
-				if (m.getCurrentMaterial().getTexture() != null && m.getTextures().get(i) != null){
-					glBindTexture(GL_TEXTURE_2D, m.getCurrentMaterial().getTexture().getTextureID());
-					TextureCoordinate tc = m.getTextures().get(i);
-					glTexCoord2f(tc.getU(), tc.getV());
+		
+		String currentMaterial = "";
+		
+		for (Face f : m.faces){
+			if (f.texture != null){
+				try {
+					if (currentMaterial != f.material.getName()){
+						glBindTexture(GL_TEXTURE_2D, TextureLoader.getTexture(
+								"PNG", RenderUtil.class.getClassLoader().getResourceAsStream(
+										f.material.getTexture())).getTextureID());
+						currentMaterial = f.material.getName();
+					}
+						
+				}
+				catch (IOException ex){
+					ex.printStackTrace();
+				}
+				for (int i : f.texture){
+					float[] tc = m.textureCoords.get(i - 1);
+					glTexCoord2f(tc[0], tc[1]);
 				}
 			}
-			glVertex3f(v.getX(), v.getY(), v.getZ());
-			if (m.getNormals().size() > i){
-				Vertex n = m.getNormals().get(i);
-				glNormal3f(n.getX(), n.getY(), n.getZ());
+			if (f.normal != null){
+				for (int i : f.normal){
+					Vector3f n = m.normals.get(i - 1);
+					glNormal3f(n.getX(), n.getY(), n.getZ());
+				}
 			}
-			i += 1;
+			for (int i : f.vertex){
+				Vector3f v = m.vertices.get(i - 1);
+				glVertex3f(v.getX(), v.getY(), v.getZ());
+			}
 		}
 
 		glDisable(GL_NORMALIZE);
