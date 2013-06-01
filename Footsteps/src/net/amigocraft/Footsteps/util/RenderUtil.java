@@ -72,15 +72,13 @@ public class RenderUtil {
 					glTexCoord2f(tc[0], tc[1]);
 				}
 			}
-			if (f.normal != null){
-				for (int i : f.normal){
-					Vector3f n = m.normals.get(i - 1);
-					glNormal3f(n.getX(), n.getY(), n.getZ());
-				}
-			}
+			int l = 0;
 			for (int i : f.vertex){
+				Vector3f n = m.normals.get(f.normal[l] - 1);
+				glNormal3f(n.getX(), n.getY(), n.getZ());
 				Vector3f v = m.vertices.get(i - 1);
 				glVertex3f(v.getX(), v.getY(), v.getZ());
+				l += 1;
 			}
 		}
 
