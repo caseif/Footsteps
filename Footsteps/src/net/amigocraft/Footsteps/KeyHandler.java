@@ -1,17 +1,7 @@
 package net.amigocraft.Footsteps;
 
-import static org.lwjgl.input.Keyboard.KEY_A;
-import static org.lwjgl.input.Keyboard.KEY_D;
-import static org.lwjgl.input.Keyboard.KEY_ESCAPE;
-import static org.lwjgl.input.Keyboard.KEY_F;
-import static org.lwjgl.input.Keyboard.KEY_F3;
-import static org.lwjgl.input.Keyboard.KEY_S;
-import static org.lwjgl.input.Keyboard.KEY_SPACE;
-import static org.lwjgl.input.Keyboard.KEY_W;
-import static org.lwjgl.input.Keyboard.isKeyDown;
-import static org.lwjgl.input.Mouse.isButtonDown;
-import static org.lwjgl.input.Mouse.isGrabbed;
-import static org.lwjgl.input.Mouse.setGrabbed;
+import static org.lwjgl.input.Keyboard.*;
+import static org.lwjgl.input.Mouse.*;
 
 import org.lwjgl.input.Mouse;
 

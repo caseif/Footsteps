@@ -38,6 +38,8 @@ import org.newdawn.slick.opengl.TextureLoader;
  */
 public class Footsteps {
 
+	public static double OPENGL_VERSION;
+
 	public static Camera camera = new Camera(250, 50, 150);
 	public float dx = 0.0f;
 	public float dy = 0.0f;
@@ -115,9 +117,13 @@ public class Footsteps {
 	public Footsteps(){
 
 		SetupDisplay.setupDisplay();
+		
+		 OPENGL_VERSION = Double.parseDouble(glGetString(GL_VERSION).substring(0, 3));
 
-		shaderProgram = ShaderLoader.loadShaderPair(VERTEX_SHADER, FRAGMENT_SHADER);
-		diffuseModifierUniform = glGetUniformLocation(shaderProgram, "diffuseLightIntensity");
+		if (OPENGL_VERSION >= 2.0){
+			shaderProgram = ShaderLoader.loadShaderPair(VERTEX_SHADER, FRAGMENT_SHADER);
+			diffuseModifierUniform = glGetUniformLocation(shaderProgram, "diffuseLightIntensity");
+		}
 
 		if (GamepadHandler.joystick.isControllerConnected()){
 			System.out.println("Gamepad \"" + GamepadHandler.joystick.getControllerName() + "\" found");
@@ -430,27 +436,38 @@ public class Footsteps {
 				glBindTexture(GL_TEXTURE_2D, 0);
 
 				// models
-				float xOff = ((float)Math.sin(Math.toRadians(camera.getYaw())) * 1) - 3;
+				/*float xOff = ((float)Math.sin(Math.toRadians(camera.getYaw())) * 1) - 3;
 				float zOff = ((float)Math.cos(Math.toRadians(camera.getYaw())) * 1) + 5;
 				glTranslatef(-camera.getX() + xOff, -camera.getY() - 5, (-camera.getZ() - zOff));
 				glRotatef(90f, 1f, 0f, 0f);
-				//glRotatef(camera.getYaw(), 0f, 1f, 0f);
-				/*System.out.println("x: " + (-camera.getX() + xOff));
+				glRotatef(camera.getYaw(), 0f, 1f, 0f);
+				System.out.println("x: " + (-camera.getX() + xOff));
 				System.out.println("y: " + -camera.getY());
 				System.out.println("z: " + (-camera.getZ() - zOff));
 				System.out.println("xOff: " + (xOff * 3));
-				System.out.println("zOff: " + (zOff * 3));*/
-				glRotatef(90f, 0f, 0f, 1f);
-				glScalef(5f, 5f, 5f);
+				System.out.println("zOff: " + (zOff * 3));
+				glRotatef(90f, 0f, 0f, 1f);*/
+				//glScalef(5f, 5f, 5f);
+				glTranslatef(250, 39, 150);
 				bunnyFrame += 1;
-				glUseProgram(shaderProgram);
-				glUniform1f(diffuseModifierUniform, 10f);
+				if (OPENGL_VERSION >= 2.0){
+					glUseProgram(shaderProgram);
+					glUniform1f(diffuseModifierUniform, 10f);
+				}
 				glEnable(GL_LIGHT0);
 				glEnable(GL_CULL_FACE);
-				//glCallList(armHandle);
+				try {
+					//glBindTexture(GL_TEXTURE_2D, TextureLoader.getTexture("PNG", this.getClass().getResourceAsStream("/models/skin_texture.png")).getTextureID());
+				}
+				catch (Exception ex){
+					ex.printStackTrace();
+				}
+				glCallList(bunnyHandle);
 				glDisable(GL_CULL_FACE);
 				glDisable(GL_LIGHT0);
-				glUseProgram(0);
+				if (OPENGL_VERSION >= 2.0){
+					glUseProgram(0);
+				}
 
 				dx = getDX();
 				dy = getDY() * -1;
@@ -606,7 +623,9 @@ public class Footsteps {
 			s.dispose();
 		}
 		AL.destroy();
-		glDeleteProgram(shaderProgram);
+		if (OPENGL_VERSION >= 2.0){
+			glDeleteProgram(shaderProgram);
+		}
 		Display.destroy();
 	}
 }
