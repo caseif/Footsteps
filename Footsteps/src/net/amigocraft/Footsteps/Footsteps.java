@@ -1,6 +1,5 @@
 package net.amigocraft.Footsteps;
 
-import static net.amigocraft.Footsteps.util.BufferUtil.*;
 import static net.amigocraft.Footsteps.util.MiscUtil.*;
 import static net.amigocraft.Footsteps.util.RenderUtil.*;
 import static org.lwjgl.input.Keyboard.*;
@@ -92,19 +91,27 @@ public class Footsteps {
 	public int buttonHeight = 50;
 
 	public static Model bunnyModel, wtModel, armModel;
+	
+	public static int terrainHandle;
+	public static int bunnyHandle;
+	public static int wtHandle;
+	public static int armHandle;
+	public static int waterHandle;
 
 	private static final String VERTEX_SHADER = "/net/amigocraft/Footsteps/shaders/shader.vs";
 	private static final String FRAGMENT_SHADER = "/net/amigocraft/Footsteps/shaders/shader.fs";
 
-	private static int shaderProgram;
-	private static int diffuseModifierUniform;
+	public static int shaderProgram;
+	public static int diffuseModifierUniform;
 
 	List<Location> terrainCap = new ArrayList<Location>();
 	public static List<CollisionBox> cBoxes = new ArrayList<CollisionBox>();
 
 	public float[] skyColor = new float[]{0f, 0.7f, 0.9f, 1.1f};
 
-	public Texture grassTexture, bunnyTexture;
+	public static Texture grassTexture;
+
+	public Texture bunnyTexture;
 
 	public List<Sound> grassSounds = new ArrayList<Sound>();
 
@@ -155,9 +162,8 @@ public class Footsteps {
 		setUpFont();
 
 		setGrabbed(true);
-
-		// this code is here as a reference for future models
-		int bunnyHandle = glGenLists(1);
+		
+		bunnyHandle = glGenLists(1);
 		glNewList(bunnyHandle, GL_COMPILE);
 		{
 			glEnable(GL_CULL_FACE);
@@ -179,7 +185,7 @@ public class Footsteps {
 		}
 		glEndList();
 
-		int wtHandle = glGenLists(1);
+		wtHandle = glGenLists(1);
 		glNewList(wtHandle, GL_COMPILE);
 		{
 			glEnable(GL_CULL_FACE);
@@ -201,7 +207,7 @@ public class Footsteps {
 		}
 		glEndList();
 
-		int armHandle = glGenLists(1);
+		armHandle = glGenLists(1);
 		glNewList(armHandle, GL_COMPILE);
 		{
 			glEnable(GL_CULL_FACE);
@@ -223,7 +229,7 @@ public class Footsteps {
 		}
 		glEndList();
 
-		int terrainHandle = glGenLists(1);
+		terrainHandle = glGenLists(1);
 		glNewList(terrainHandle, GL_COMPILE);
 		{
 			BufferedImage hm = null;
@@ -411,63 +417,9 @@ public class Footsteps {
 				GamepadHandler.handleGamepad();
 				KeyHandler.handleKeys();
 
-				glLight(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
+				renderWorld();
 
-				// skybox
-				if (wireframe)
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				glPushMatrix();
-				glLoadIdentity();
-				glRotatef(camera.getPitch() - 13, 1, 0, 0);
-				glRotatef(camera.getYaw(), 0, 1, 0);
-				glRotatef(5, 0, 0, 1);
-				glCallList(SkyFactory.getHandle());
-				glPopMatrix();
-				if (wireframe)
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-				drawString(0, 0, " ", false);
-
-				// terrain
-				grassTexture.bind();
-				glEnable(GL_LIGHT1);
-				glCallList(terrainHandle);
-				glDisable(GL_LIGHT1);
-				glBindTexture(GL_TEXTURE_2D, 0);
-
-				// models
-				/*float xOff = ((float)Math.sin(Math.toRadians(camera.getYaw())) * 1) - 3;
-				float zOff = ((float)Math.cos(Math.toRadians(camera.getYaw())) * 1) + 5;
-				glTranslatef(-camera.getX() + xOff, -camera.getY() - 5, (-camera.getZ() - zOff));
-				glRotatef(90f, 1f, 0f, 0f);
-				glRotatef(camera.getYaw(), 0f, 1f, 0f);
-				System.out.println("x: " + (-camera.getX() + xOff));
-				System.out.println("y: " + -camera.getY());
-				System.out.println("z: " + (-camera.getZ() - zOff));
-				System.out.println("xOff: " + (xOff * 3));
-				System.out.println("zOff: " + (zOff * 3));
-				glRotatef(90f, 0f, 0f, 1f);*/
-				//glScalef(5f, 5f, 5f);
-				glTranslatef(250, 39, 150);
-				bunnyFrame += 1;
-				if (OPENGL_VERSION >= 2.0){
-					glUseProgram(shaderProgram);
-					glUniform1f(diffuseModifierUniform, 10f);
-				}
-				glEnable(GL_LIGHT0);
-				glEnable(GL_CULL_FACE);
-				try {
-					//glBindTexture(GL_TEXTURE_2D, TextureLoader.getTexture("PNG", this.getClass().getResourceAsStream("/models/skin_texture.png")).getTextureID());
-				}
-				catch (Exception ex){
-					ex.printStackTrace();
-				}
-				glCallList(bunnyHandle);
-				glDisable(GL_CULL_FACE);
-				glDisable(GL_LIGHT0);
-				if (OPENGL_VERSION >= 2.0){
-					glUseProgram(0);
-				}
+				glCallList(waterHandle);
 
 				dx = getDX();
 				dy = getDY() * -1;

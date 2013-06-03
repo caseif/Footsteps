@@ -1,6 +1,7 @@
 package net.amigocraft.Footsteps.util;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL21.*;
 
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
@@ -69,6 +70,8 @@ public class SetupDisplay {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_ALPHA_TEST);
 		glAlphaFunc(GL_GREATER, 0);
+		if (Footsteps.OPENGL_VERSION >= 2.1)
+			glEnable(GL_PIXEL_UNPACK_BUFFER);
 
 	}
 }

@@ -1,6 +1,11 @@
 package net.amigocraft.Footsteps.util;
 
+import static net.amigocraft.Footsteps.Footsteps.*;
+import static net.amigocraft.Footsteps.util.BufferUtil.asFloatBuffer;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.glUniform1f;
+import static org.lwjgl.opengl.GL20.glUseProgram;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.io.IOException;
@@ -9,6 +14,7 @@ import net.amigocraft.Footsteps.Face;
 import net.amigocraft.Footsteps.Footsteps;
 import net.amigocraft.Footsteps.Location;
 import net.amigocraft.Footsteps.Model;
+import net.amigocraft.Footsteps.SkyFactory;
 
 import org.lwjgl.opengl.Display;
 import org.lwjgl.util.vector.Vector3f;
@@ -21,6 +27,65 @@ public class RenderUtil {
 	// GUI related variables
 	public static UnicodeFont font;
 	public static UnicodeFont backFont;
+	
+	public static void renderWorld(){
+		glLight(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
+
+		// skybox
+		if (wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glPushMatrix();
+		glLoadIdentity();
+		glRotatef(camera.getPitch() - 13, 1, 0, 0);
+		glRotatef(camera.getYaw(), 0, 1, 0);
+		glRotatef(5, 0, 0, 1);
+		glCallList(SkyFactory.getHandle());
+		glPopMatrix();
+		if (wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		drawString(0, 0, " ", false);
+
+		// terrain
+		Footsteps.grassTexture.bind();
+		glEnable(GL_LIGHT1);
+		glCallList(Footsteps.terrainHandle);
+		glDisable(GL_LIGHT1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// models
+		/*float xOff = ((float)Math.sin(Math.toRadians(camera.getYaw())) * 1) - 3;
+		float zOff = ((float)Math.cos(Math.toRadians(camera.getYaw())) * 1) + 5;
+		glTranslatef(-camera.getX() + xOff, -camera.getY() - 5, (-camera.getZ() - zOff));
+		glRotatef(90f, 1f, 0f, 0f);
+		glRotatef(camera.getYaw(), 0f, 1f, 0f);
+		System.out.println("x: " + (-camera.getX() + xOff));
+		System.out.println("y: " + -camera.getY());
+		System.out.println("z: " + (-camera.getZ() - zOff));
+		System.out.println("xOff: " + (xOff * 3));
+		System.out.println("zOff: " + (zOff * 3));
+		glRotatef(90f, 0f, 0f, 1f);*/
+		//glScalef(5f, 5f, 5f);
+		glTranslatef(250, 39, 150);
+		if (OPENGL_VERSION >= 2.0){
+			glUseProgram(shaderProgram);
+			glUniform1f(diffuseModifierUniform, 10f);
+		}
+		glEnable(GL_LIGHT0);
+		glEnable(GL_CULL_FACE);
+		try {
+			//glBindTexture(GL_TEXTURE_2D, TextureLoader.getTexture("PNG", this.getClass().getResourceAsStream("/models/skin_texture.png")).getTextureID());
+		}
+		catch (Exception ex){
+			ex.printStackTrace();
+		}
+		glCallList(bunnyHandle);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_LIGHT0);
+		if (OPENGL_VERSION >= 2.0){
+			glUseProgram(0);
+		}
+	}
 
 	public static Vector3f getNormal(Vector3f p1, Vector3f p2, Vector3f p3){
 		Vector3f v = new Vector3f();
