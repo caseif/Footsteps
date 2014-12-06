@@ -79,10 +79,10 @@ public class Footsteps {
 	public static float lastFps = 0f;
 	public float currentTime = 0f;
 	public static int currentFps = 0;
-	public static float terrainBrightness = 0.15f; // brightness is directly proportional to value
+	public static float terrainBrightness = 0.45f; // brightness is directly proportional to value
 
 	public static boolean wireframe = false;
-	private boolean colorize = false;
+	private boolean colorize = true;
 	private boolean textured = true;
 
 	public int buttonWidth = 350;
@@ -228,6 +228,8 @@ public class Footsteps {
 		terrainHandle = glGenLists(1);
 		glNewList(terrainHandle, GL_COMPILE);
 		{
+			glDisable(GL_CULL_FACE);
+			glEnable(GL_DEPTH_TEST);
 			BufferedImage hm = null;
 			BufferedImage hmRef = null;
 			try {

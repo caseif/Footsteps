@@ -11,8 +11,7 @@
 	<name>Footsteps</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!--<project.libPath>C:/Users/Maxim/AppData/Roaming/Footsteps/bin</project.libPath>-->
-		<project.libPath>.</project.libPath>
+		<project.libPath>lib</project.libPath>
 	</properties>
 
 	<dependencies>
@@ -87,7 +86,14 @@
 							<mainClass>net.amigocraft.footsteps.Footsteps</mainClass>
 						</manifest>
 						<manifestEntries>
-							<Class-Path>${project.libPath}/lwjgl.jar ${project.libPath}/lwjgl_util.jar ${project.libPath}/jinput.jar ${project.libPath}/slick.jar ${project.libPath}/soundsystem.jar ${project.libPath}/librarylwjglopenal.jar ${project.libPath}/codecjorbis.jar</Class-Path>
+							<Class-Path>
+								${project.libPath}/lwjgl.jar ${project.libPath}/lwjgl_util.jar
+								${project.libPath}/jinput.jar ${project.libPath}/slick.jar
+								${project.libPath}/soundsystem/soundsystem.jar
+								${project.libPath}/soundsystem/librarylwjglopenal.jar
+								${project.libPath}/soundsystem/codecjorbis.jar
+								${project.libPath}/jorbis.jar
+							</Class-Path>
 						</manifestEntries>
 					</archive>
 				</configuration>
