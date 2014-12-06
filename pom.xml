@@ -14,6 +14,17 @@
 		<project.libPath>lib</project.libPath>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>amigocraft</id>
+			<url>http://repo.amigocraft.net/content/groups/public/</url>
+		</repository>
+		<repository>
+			<id>ooo-maven</id>
+			<url>http://ooo-maven.googlecode.com/hg/repository/</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<!-- scopes are marked as compile so game can be run from a testing environment -->
 		<dependency>
