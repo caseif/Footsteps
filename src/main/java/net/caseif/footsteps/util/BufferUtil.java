@@ -1,4 +1,4 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

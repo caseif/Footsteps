@@ -1,9 +1,9 @@
-package net.amigocraft.footsteps;
+package net.caseif.footsteps;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import net.amigocraft.footsteps.util.Vector3f;
+import net.caseif.footsteps.util.Vector3f;
 
 public class Model {
 

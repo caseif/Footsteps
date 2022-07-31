@@ -1,4 +1,4 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
 public class Vector3f {
     public float x;

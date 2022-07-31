@@ -1,4 +1,4 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,10 +7,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.amigocraft.footsteps.Face;
-import net.amigocraft.footsteps.Footsteps;
-import net.amigocraft.footsteps.Material;
-import net.amigocraft.footsteps.Model;
+import net.caseif.footsteps.Face;
+import net.caseif.footsteps.Footsteps;
+import net.caseif.footsteps.Material;
+import net.caseif.footsteps.Model;
 
 public class ObjLoader {
 

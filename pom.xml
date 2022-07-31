@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>net.amigocraft.footsteps</groupId>
+	<groupId>net.caseif.footsteps</groupId>
 	<artifactId>footsteps</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
@@ -168,7 +168,7 @@
 						<compress>true</compress>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>net.amigocraft.footsteps.Footsteps</mainClass>
+							<mainClass>net.caseif.footsteps.Footsteps</mainClass>
 						</manifest>
 						<manifestEntries>
 							<Class-Path>

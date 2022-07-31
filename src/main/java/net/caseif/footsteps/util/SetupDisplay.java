@@ -1,6 +1,6 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
-import static net.amigocraft.footsteps.util.GluEmulation.*;
+import static net.caseif.footsteps.util.GluEmulation.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL21.*;
@@ -11,11 +11,11 @@ import java.util.OptionalLong;
 
 import javax.imageio.ImageIO;
 
-import static net.amigocraft.footsteps.util.BufferUtil.*;
-import static net.amigocraft.footsteps.util.ImageUtil.*;
+import static net.caseif.footsteps.util.BufferUtil.*;
+import static net.caseif.footsteps.util.ImageUtil.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-import net.amigocraft.footsteps.Footsteps;
+import net.caseif.footsteps.Footsteps;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.opengl.GL;

@@ -1,8 +1,5 @@
-package net.amigocraft.footsteps;
+package net.caseif.footsteps;
 
-import static net.amigocraft.footsteps.util.GluEmulation.gluLookAt;
-import static net.amigocraft.footsteps.util.MiscUtil.*;
-import static net.amigocraft.footsteps.util.RenderUtil.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -15,11 +12,12 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import net.amigocraft.footsteps.util.ObjLoader;
-import net.amigocraft.footsteps.util.SetupDisplay;
-import net.amigocraft.footsteps.util.ShaderLoader;
-import net.amigocraft.footsteps.util.Vector3f;
+import net.caseif.footsteps.util.ObjLoader;
+import net.caseif.footsteps.util.SetupDisplay;
+import net.caseif.footsteps.util.ShaderLoader;
+import net.caseif.footsteps.util.Vector3f;
 
+import net.caseif.footsteps.util.*;
 import org.lwjgl.BufferUtils;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
@@ -38,8 +36,8 @@ public class Footsteps {
 	public float dx = 0.0f;
 	public float dy = 0.0f;
 	public static float delta = 0;
-	public long lastTime = getTime();
-	public static long time = getTime();
+	public long lastTime = MiscUtil.getTime();
+	public static long time = MiscUtil.getTime();
 	public static Vector3f lightPosition = new Vector3f(-500f, -100f, 500f);
 	public static long lastPress = (int)System.currentTimeMillis();
 
@@ -155,7 +153,7 @@ public class Footsteps {
 		grassSounds.add(new Sound("grass5", "/sounds/grass5.ogg"));
 		grassSounds.add(new Sound("grass6", "/sounds/grass6.ogg"));*/
 
-		setUpFont();
+		RenderUtil.setUpFont();
 
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -170,7 +168,7 @@ public class Footsteps {
 			glColor3f(0.45f, 0.35f, 0.1f);
 			try {
 				bunnyModel = ObjLoader.loadModel("/models/bunny.obj");
-				drawModel(bunnyModel);
+				RenderUtil.drawModel(bunnyModel);
 			}
 			catch (IOException ex){
 				ex.printStackTrace();
@@ -192,7 +190,7 @@ public class Footsteps {
 			glColor3f(0.45f, 0.35f, 0.1f);
 			try {
 				wtModel = ObjLoader.loadModel("/models/Walkie_Talkie.obj");
-				drawModel(wtModel);
+				RenderUtil.drawModel(wtModel);
 			}
 			catch (IOException ex){
 				ex.printStackTrace();
@@ -214,7 +212,7 @@ public class Footsteps {
 			glColor3f(0.45f, 0.35f, 0.1f);
 			try {
 				armModel = ObjLoader.loadModel("/models/fps_arms.obj");
-				drawModel(armModel);
+				RenderUtil.drawModel(armModel);
 			}
 			catch (IOException ex){
 				ex.printStackTrace();
@@ -340,7 +338,7 @@ public class Footsteps {
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
 
-			time = getTime();
+			time = MiscUtil.getTime();
 			delta = time - lastTime;
 			lastTime = time;
 
@@ -405,8 +403,8 @@ public class Footsteps {
 				glVertex3f((winWidth / 2) - (buttonWidth / 2), resumeBtnPos + buttonHeight, 1f);
 				glEnd();
 				String resumeBtnText = "Resume Game";
-				drawString(window, (winWidth / 2) - (font.getWidth(resumeBtnText) / 2),
-						resumeBtnPos + ((buttonHeight - font.getHeight(resumeBtnText)) / 2),
+				RenderUtil.drawString(window, (winWidth / 2) - (RenderUtil.font.getWidth(resumeBtnText) / 2),
+						resumeBtnPos + ((buttonHeight - RenderUtil.font.getHeight(resumeBtnText)) / 2),
 						resumeBtnText, false);
 
 				glEnable(GL_DEPTH_TEST);
@@ -432,20 +430,20 @@ public class Footsteps {
 				GamepadHandler.handleGamepad();
 				KeyHandler.handleKeys(window);
 
-				renderWorld(window);
+				RenderUtil.renderWorld(window);
 
-				updateFps();
+				MiscUtil.updateFps();
 				if (debug){
-					drawString(window, 10, 30, "fps: " + currentFps, true);
-					drawString(window, 10, 65, "x: " + camera.getX(), true);
-					drawString(window, 10, 100, "y: " + camera.getY(), true);
-					drawString(window, 10, 135, "z: " + camera.getZ(), true);
-					drawString(window, 10, 170, "pitch: " + camera.getPitch(), true);
-					drawString(window, 10, 205, "yaw: " + camera.getYaw(), true);
-					drawString(window, 10, 240, "gamepad: " + gamepad, true);
+					RenderUtil.drawString(window, 10, 30, "fps: " + currentFps, true);
+					RenderUtil.drawString(window, 10, 65, "x: " + camera.getX(), true);
+					RenderUtil.drawString(window, 10, 100, "y: " + camera.getY(), true);
+					RenderUtil.drawString(window, 10, 135, "z: " + camera.getZ(), true);
+					RenderUtil.drawString(window, 10, 170, "pitch: " + camera.getPitch(), true);
+					RenderUtil.drawString(window, 10, 205, "yaw: " + camera.getYaw(), true);
+					RenderUtil.drawString(window, 10, 240, "gamepad: " + gamepad, true);
 					int mb = 1024 * 1024;
 					Runtime runtime = Runtime.getRuntime();
-					drawString(window, 10, 275, runtime.maxMemory() / mb + "mb allocated memory: " +
+					RenderUtil.drawString(window, 10, 275, runtime.maxMemory() / mb + "mb allocated memory: " +
 							(runtime.maxMemory() - runtime.freeMemory()) / mb + "mb used, " +
 							runtime.freeMemory() / mb + "mb free", true);
 				}

@@ -1,4 +1,4 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
 import static org.lwjgl.opengl.GL11.*;
 

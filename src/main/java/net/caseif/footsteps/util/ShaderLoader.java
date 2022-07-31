@@ -1,10 +1,10 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import net.amigocraft.footsteps.Footsteps;
+import net.caseif.footsteps.Footsteps;
 
 import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL20.*;

@@ -1,7 +1,7 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
-import static net.amigocraft.footsteps.Footsteps.*;
-import static net.amigocraft.footsteps.util.BufferUtil.asFloatBuffer;
+import static net.caseif.footsteps.Footsteps.*;
+import static net.caseif.footsteps.util.BufferUtil.asFloatBuffer;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniform1f;
@@ -10,13 +10,12 @@ import static org.lwjgl.opengl.GL20.glUseProgram;
 import java.awt.Color;
 import java.awt.Font;
 import java.io.IOException;
-import java.nio.IntBuffer;
 
-import net.amigocraft.footsteps.Face;
-import net.amigocraft.footsteps.Footsteps;
-import net.amigocraft.footsteps.Location;
-import net.amigocraft.footsteps.Model;
-import net.amigocraft.footsteps.SkyFactory;
+import net.caseif.footsteps.Face;
+import net.caseif.footsteps.Footsteps;
+import net.caseif.footsteps.Location;
+import net.caseif.footsteps.Model;
+import net.caseif.footsteps.SkyFactory;
 
 import org.lwjgl.BufferUtils;
 import org.newdawn.slick.UnicodeFont;

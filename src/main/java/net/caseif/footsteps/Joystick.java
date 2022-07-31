@@ -1,4 +1,4 @@
-package net.amigocraft.footsteps;
+package net.caseif.footsteps;
 
 import java.util.ArrayList;
 import net.java.games.input.Component;

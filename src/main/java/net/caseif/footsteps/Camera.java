@@ -1,6 +1,6 @@
-package net.amigocraft.footsteps;
+package net.caseif.footsteps;
 
-import net.amigocraft.footsteps.util.Vector3f;
+import net.caseif.footsteps.util.Vector3f;
 
 import java.util.Random;
 

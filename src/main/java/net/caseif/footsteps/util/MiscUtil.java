@@ -1,6 +1,6 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
-import net.amigocraft.footsteps.Footsteps;
+import net.caseif.footsteps.Footsteps;
 
 import static org.lwjgl.glfw.GLFW.*;
 

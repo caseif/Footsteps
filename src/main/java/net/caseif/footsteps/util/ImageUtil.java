@@ -1,4 +1,4 @@
-package net.amigocraft.footsteps.util;
+package net.caseif.footsteps.util;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;

@@ -1,10 +1,9 @@
-package net.amigocraft.footsteps;
-
-import static net.amigocraft.footsteps.util.GluEmulation.*;
+package net.caseif.footsteps;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 
+import net.caseif.footsteps.util.GluEmulation;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
@@ -24,7 +23,7 @@ public class SkyFactory {
 		skyHandle = glGenLists(1);
 		glNewList(skyHandle, GL_COMPILE);
 		{
-			gluLookAt(
+			GluEmulation.gluLookAt(
 					0, 0, 0,
 					Footsteps.camera.getX(), Footsteps.camera.getY(), Footsteps.camera.getZ(),
 					0, 1, 0);

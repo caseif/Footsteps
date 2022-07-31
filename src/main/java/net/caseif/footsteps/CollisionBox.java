@@ -1,4 +1,4 @@
-package net.amigocraft.footsteps;
+package net.caseif.footsteps;
 
 public class CollisionBox {
 
