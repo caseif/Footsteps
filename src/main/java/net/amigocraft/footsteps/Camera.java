@@ -1,9 +1,10 @@
 package net.amigocraft.footsteps;
 
+import net.amigocraft.footsteps.util.Vector3f;
+
 import java.util.Random;
 
 import static org.lwjgl.opengl.GL11.*;
-import org.lwjgl.util.vector.Vector3f;
 
 public class Camera {
 
@@ -307,8 +308,8 @@ public class Camera {
 			moved = false;
 
 			position = add(position, velocity, true);
-			Sound.soundSystem.setListenerPosition(position.getX(), position.getY(), position.getZ());
-			Sound.soundSystem.setListenerVelocity(velocity.getX(), velocity.getY(), velocity.getZ());
+			//Sound.soundSystem.setListenerPosition(position.getX(), position.getY(), position.getZ());
+			//Sound.soundSystem.setListenerVelocity(velocity.getX(), velocity.getY(), velocity.getZ());
 			glRotatef(pitch, 1.0f, 0.0f, 0.0f);
 			glRotatef(yaw, 0.0f, 1.0f, 0.0f);
 			glTranslatef(position.x, position.y, position.z);

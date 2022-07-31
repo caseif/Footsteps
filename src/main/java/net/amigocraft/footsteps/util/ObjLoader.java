@@ -12,12 +12,13 @@ import net.amigocraft.footsteps.Footsteps;
 import net.amigocraft.footsteps.Material;
 import net.amigocraft.footsteps.Model;
 
-import org.lwjgl.util.vector.Vector3f;
-
 public class ObjLoader {
 
 	public static Model loadModel(String path) throws IOException {
 		InputStream getMtlIs = Footsteps.class.getResourceAsStream(path);
+		if (getMtlIs == null) {
+		    throw new RuntimeException("No resource found at path '" + path + "'");
+		}
 		BufferedReader getMtlReader = new BufferedReader(new InputStreamReader(getMtlIs));
 		String getMtlLine;
 		boolean mtlLib = false;

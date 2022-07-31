@@ -1,6 +1,6 @@
 package net.amigocraft.footsteps;
 
-import org.lwjgl.util.vector.Vector3f;
+import net.amigocraft.footsteps.util.Vector3f;
 
 public class Location {
 

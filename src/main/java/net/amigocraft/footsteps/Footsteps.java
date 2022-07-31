@@ -1,9 +1,9 @@
 package net.amigocraft.footsteps;
 
+import static net.amigocraft.footsteps.util.GluEmulation.gluLookAt;
 import static net.amigocraft.footsteps.util.MiscUtil.*;
 import static net.amigocraft.footsteps.util.RenderUtil.*;
-import static org.lwjgl.input.Keyboard.*;
-import static org.lwjgl.input.Mouse.*;
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
@@ -12,18 +12,15 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.imageio.ImageIO;
 
 import net.amigocraft.footsteps.util.ObjLoader;
 import net.amigocraft.footsteps.util.SetupDisplay;
 import net.amigocraft.footsteps.util.ShaderLoader;
+import net.amigocraft.footsteps.util.Vector3f;
 
-import org.lwjgl.input.Mouse;
-//import org.lwjgl.openal.AL;
-import org.lwjgl.opengl.Display;
-import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.BufferUtils;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
@@ -46,14 +43,14 @@ public class Footsteps {
 	public static Vector3f lightPosition = new Vector3f(-500f, -100f, 500f);
 	public static long lastPress = (int)System.currentTimeMillis();
 
-	float mouseSensitivity = 0.05f;
+	float mouseSensitivity = 0.025f;
 	static float movementSpeed = 20.0f;
 	static float joystickPovSpeed = 100.0f;
 	public static float jumpFrame = 0;
 	public float jumpSpeedFrame = 0;
 	public float jumpFreezeFrame = 0;
 	public float fallFrame = 0f;
-	public int bunnyFrame = 0;
+	public static int bunnyFrame = 0;
 
 	public static boolean jumping = false;
 	public static boolean falling = true;
@@ -82,7 +79,7 @@ public class Footsteps {
 	public static float terrainBrightness = 0.45f; // brightness is directly proportional to value
 
 	public static boolean wireframe = false;
-	private boolean colorize = true;
+	private boolean colorize = false;
 	private boolean textured = true;
 
 	public int buttonWidth = 350;
@@ -94,7 +91,6 @@ public class Footsteps {
 	public static int bunnyHandle;
 	public static int wtHandle;
 	public static int armHandle;
-	public static int waterHandle;
 
 	private static final String VERTEX_SHADER = "/shaders/shader.vs";
 	private static final String FRAGMENT_SHADER = "/shaders/shader.fs";
@@ -119,9 +115,13 @@ public class Footsteps {
 		new Footsteps();
 	}
 
-	public Footsteps(){
+	public Footsteps() {
+		var windowOpt = SetupDisplay.setupDisplay();
+		if (windowOpt.isEmpty()) {
+			throw new RuntimeException("Failed to create window");
+		}
 
-		SetupDisplay.setupDisplay();
+		var window = windowOpt.getAsLong();
 
 		OPENGL_VERSION = Double.parseDouble(glGetString(GL_VERSION).substring(0, 3));
 
@@ -147,17 +147,17 @@ public class Footsteps {
 		// sounds
 		//try {AL.create();}
 		//catch (LWJGLException ex){ex.printStackTrace();}
-		Sound.initialize();
+		/*Sound.initialize();
 		grassSounds.add(new Sound("grass1", "/sounds/grass1.ogg"));
 		grassSounds.add(new Sound("grass2", "/sounds/grass2.ogg"));
 		grassSounds.add(new Sound("grass3", "/sounds/grass3.ogg"));
 		grassSounds.add(new Sound("grass4", "/sounds/grass4.ogg"));
 		grassSounds.add(new Sound("grass5", "/sounds/grass5.ogg"));
-		grassSounds.add(new Sound("grass6", "/sounds/grass6.ogg"));
+		grassSounds.add(new Sound("grass6", "/sounds/grass6.ogg"));*/
 
 		setUpFont();
 
-		setGrabbed(true);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		bunnyHandle = glGenLists(1);
 		glNewList(bunnyHandle, GL_COMPILE);
@@ -170,7 +170,7 @@ public class Footsteps {
 			glColor3f(0.45f, 0.35f, 0.1f);
 			try {
 				bunnyModel = ObjLoader.loadModel("/models/bunny.obj");
-				//drawModel(bunnyModel);
+				drawModel(bunnyModel);
 			}
 			catch (IOException ex){
 				ex.printStackTrace();
@@ -242,7 +242,7 @@ public class Footsteps {
 			glMaterialf(GL_FRONT, GL_SHININESS, 10f);
 			glColor3f(0.85f, 1f, 0.85f);
 			for (float x = 1; x < hm.getWidth(null); x++){
-				glBegin(GL_QUAD_STRIP);
+				glBegin(GL_TRIANGLES);
 				for (float z = 1; z < hm.getHeight(null); z++){
 					if (x < hm.getWidth(null) && z < hm.getHeight(null)){
 						float yDivide = 5;
@@ -296,38 +296,7 @@ public class Footsteps {
 						Vector3f v3 = new Vector3f(x, y3, z + 1f);
 						Vector3f v4 = new Vector3f(x + 1f, y4, z + 1f);
 
-						if (x == 0){ // x is 0
-							if (textured)
-								glTexCoord2f(0, 0);
-							glVertex3f(v1.x, v1.y, v1.z);
-							if (textured)
-								glTexCoord2f(0, 0);
-							glVertex3f(v2.x, v2.y, v2.z);
-							if (textured)
-								glTexCoord2f(0, 0);
-							glVertex3f(v4.x, v4.y, v4.z);
-							if (textured)
-								glTexCoord2f(0, 0);
-							glVertex3f(v3.x, v3.y, v3.z);
-						}
-						else if (x / 2 * 2 == x){ // x is odd
-							if (textured)
-								glTexCoord2f(0, 0);
-							glVertex3f(v4.x, v4.y, v4.z);
-							if (textured)
-								glTexCoord2f(0, 0);
-							glVertex3f(v3.x, v3.y, v3.z);
-						}
-						else { // x is even
-							if (textured)
-								glTexCoord2f(0, 0);
-							glVertex3f(v3.x, v3.y, v3.z);
-							if (textured)
-								glTexCoord2f(0, 0);
-							glVertex3f(v4.x, v4.y, v4.z);
-						}
-
-						/*// triangle 1
+						// triangle 1
 						if (textured)
 							glTexCoord2f(0, 0);
 						glVertex3f(v1.x, v1.y, v1.z);
@@ -351,7 +320,7 @@ public class Footsteps {
 
 						if (textured)
 							glTexCoord2f(1, 1);
-						glVertex3f(v4.x, v4.y, v4.z);*/
+						glVertex3f(v4.x, v4.y, v4.z);
 
 						terrainCap.add(new Location(x, y1, z));
 					}
@@ -363,36 +332,54 @@ public class Footsteps {
 
 		new SkyFactory();
 
-		while (!Display.isCloseRequested()){
+		double lastMouseX = 0;
+		double lastMouseY = 0;
+
+		glfwSwapInterval(1);
+
+		while (!glfwWindowShouldClose(window)) {
+			glfwPollEvents();
 
 			time = getTime();
 			delta = time - lastTime;
 			lastTime = time;
 
-			if (ingameMenu){
-				if (Mouse.isGrabbed())
-					Mouse.setGrabbed(false);
+			var cursorXBuf = BufferUtils.createDoubleBuffer(1);
+			var cursorYBuf = BufferUtils.createDoubleBuffer(1);
+			glfwGetCursorPos(window, cursorXBuf, cursorYBuf);
+			var cursorX = cursorXBuf.get();
+			var cursorY = cursorYBuf.get();
+			dx = (float) (cursorX - lastMouseX);
+			dy = (float) (cursorY - lastMouseY);
+			lastMouseX = cursorX;
+			lastMouseY = cursorY;
+
+			if (ingameMenu) {
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 				// close menu
-				if (isKeyDown(KEY_ESCAPE)){
+				if (glfwGetKey(window, GLFW_KEY_ESCAPE) != 0) {
 					if (System.currentTimeMillis() - lastPress > 200){
 						ingameMenu = false;
 						lastPress = System.currentTimeMillis();
-						if (!Mouse.isGrabbed())
-							Mouse.setGrabbed(true);
+						var mouseMode = glfwGetInputMode(window, GLFW_CURSOR);
+						if (mouseMode != GLFW_CURSOR_DISABLED)
+							glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 						continue;
 					}
 				}
 
-				dx = getDX();
-				dy = getDY() * -1;
-
+				var winWidthBuf = BufferUtils.createIntBuffer(1);
+				var winHeightBuf = BufferUtils.createIntBuffer(1);
+				glfwGetWindowSize(window, winWidthBuf, winHeightBuf);
+				var winWidth = winWidthBuf.get();
+				var winHeight = winHeightBuf.get();
 
 				glMatrixMode(GL_PROJECTION);
 				glPushMatrix();
 				glLoadIdentity();
-				glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1 );
+				glOrtho(0, winWidth, winHeight, 0, -1, 1 );
 				glMatrixMode(GL_MODELVIEW);
 				glPushMatrix();
 				glLoadIdentity();
@@ -412,13 +399,13 @@ public class Footsteps {
 
 				glColor3f(.6f, .6f, .6f);
 				int resumeBtnPos = 200;
-				glVertex3f((Display.getWidth() / 2) - (buttonWidth / 2), resumeBtnPos, 1f);
-				glVertex3f((Display.getWidth() / 2) + (buttonWidth / 2), resumeBtnPos, 1f);
-				glVertex3f((Display.getWidth() / 2) + (buttonWidth / 2), resumeBtnPos + buttonHeight, 1f);
-				glVertex3f((Display.getWidth() / 2) - (buttonWidth / 2), resumeBtnPos + buttonHeight, 1f);
+				glVertex3f((winWidth / 2) - (buttonWidth / 2), resumeBtnPos, 1f);
+				glVertex3f((winWidth / 2) + (buttonWidth / 2), resumeBtnPos, 1f);
+				glVertex3f((winWidth / 2) + (buttonWidth / 2), resumeBtnPos + buttonHeight, 1f);
+				glVertex3f((winWidth / 2) - (buttonWidth / 2), resumeBtnPos + buttonHeight, 1f);
 				glEnd();
 				String resumeBtnText = "Resume Game";
-				drawString((Display.getWidth() / 2) - (font.getWidth(resumeBtnText) / 2),
+				drawString(window, (winWidth / 2) - (font.getWidth(resumeBtnText) / 2),
 						resumeBtnPos + ((buttonHeight - font.getHeight(resumeBtnText)) / 2),
 						resumeBtnText, false);
 
@@ -430,11 +417,10 @@ public class Footsteps {
 				glPopMatrix();
 				glMatrixMode(GL_MODELVIEW);
 				glPopMatrix();
-
 			}
 
 			else {
-
+				glClearColor(0f, 0f, 0f, 1f);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 				if (wireframe)
@@ -444,32 +430,27 @@ public class Footsteps {
 
 				moved = false;
 				GamepadHandler.handleGamepad();
-				KeyHandler.handleKeys();
+				KeyHandler.handleKeys(window);
 
-				renderWorld();
-
-				glCallList(waterHandle);
-
-				dx = getDX();
-				dy = getDY() * -1;
+				renderWorld(window);
 
 				updateFps();
 				if (debug){
-					drawString(10, 10, "fps: " + currentFps, true);
-					drawString(10, 45, "x: " + camera.getX(), true);
-					drawString(10, 80, "y: " + camera.getY(), true);
-					drawString(10, 115, "z: " + camera.getZ(), true);
-					drawString(10, 150, "pitch: " + camera.getPitch(), true);
-					drawString(10, 185, "yaw: " + camera.getYaw(), true);
-					drawString(10, 220, "gamepad: " + gamepad, true);
+					drawString(window, 10, 30, "fps: " + currentFps, true);
+					drawString(window, 10, 65, "x: " + camera.getX(), true);
+					drawString(window, 10, 100, "y: " + camera.getY(), true);
+					drawString(window, 10, 135, "z: " + camera.getZ(), true);
+					drawString(window, 10, 170, "pitch: " + camera.getPitch(), true);
+					drawString(window, 10, 205, "yaw: " + camera.getYaw(), true);
+					drawString(window, 10, 240, "gamepad: " + gamepad, true);
 					int mb = 1024 * 1024;
 					Runtime runtime = Runtime.getRuntime();
-					drawString(10, 255, runtime.maxMemory() / mb + "mb allocated memory: " +
+					drawString(window, 10, 275, runtime.maxMemory() / mb + "mb allocated memory: " +
 							(runtime.maxMemory() - runtime.freeMemory()) / mb + "mb used, " +
 							runtime.freeMemory() / mb + "mb free", true);
 				}
 
-				if (Mouse.isGrabbed()){
+				if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
 					camera.setYaw(camera.getYaw() + dx * mouseSensitivity / (delta / 60));
 					camera.setPitch(camera.getPitch() + dy * mouseSensitivity / (delta / 60));
 				}
@@ -582,10 +563,10 @@ public class Footsteps {
 
 					if (moved){
 						if (time - lastGrassSound > playerFootstepDelay){
-							Random rand = new Random();
+							/*Random rand = new Random();
 							int soundToPlay = rand.nextInt(grassSounds.size() - 1);
 							grassSounds.get(soundToPlay).play();
-							lastGrassSound = time;
+							lastGrassSound = time;*/
 						}
 					}
 				}
@@ -596,17 +577,16 @@ public class Footsteps {
 
 			}
 
-			Display.sync(60);
-
-			Display.update();
+			glfwSwapBuffers(window);
 		}
-		for (Sound s : grassSounds){
+		/*for (Sound s : grassSounds){
 			s.dispose();
-		}
+		}*/
 		//AL.destroy();
 		if (OPENGL_VERSION >= 2.0){
 			glDeleteProgram(shaderProgram);
 		}
-		Display.destroy();
+
+		glfwDestroyWindow(window);
 	}
 }

@@ -1,55 +1,53 @@
 package net.amigocraft.footsteps;
 
-import static org.lwjgl.input.Keyboard.*;
-import static org.lwjgl.input.Mouse.*;
-
-import org.lwjgl.input.Mouse;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class KeyHandler {
-	public static void handleKeys(){
-		if (!Footsteps.moved && Mouse.isGrabbed()){
-			if (isKeyDown(KEY_W))
+	public static void handleKeys(long window) {
+
+		var mouseMode = glfwGetInputMode(window, GLFW_CURSOR);
+		var isGrabbed = mouseMode == GLFW_CURSOR_DISABLED;
+
+		if (!Footsteps.moved && isGrabbed) {
+			if (glfwGetKey(window, GLFW_KEY_W) != 0)
 				Footsteps.forward = true;
 			else if (Footsteps.forward){
 				Footsteps.camera.walkForward(0);
 				Footsteps.forward = false;
 			}
 
-			if (isKeyDown(KEY_S))
+			if (glfwGetKey(window, GLFW_KEY_S) != 0)
 				Footsteps.backward = true;
-			else if (Footsteps.backward){
+			else if (Footsteps.backward) {
 				Footsteps.camera.walkBackward(0);
 				Footsteps.backward = false;
 			}
 
-			if (isKeyDown(KEY_A))
+			if (glfwGetKey(window, GLFW_KEY_A) != 0)
 				Footsteps.left = true;
-			else if (Footsteps.left){
+			else if (Footsteps.left) {
 				Footsteps.camera.strafeLeft(0);
 				Footsteps.left = false;
 			}
 
-			if (isKeyDown(KEY_D))
+			if (glfwGetKey(window, GLFW_KEY_D) != 0)
 				Footsteps.right = true;
-			else if (Footsteps.right){
+			else if (Footsteps.right) {
 				Footsteps.camera.strafeRight(0);
 				Footsteps.right = false;
 			}
 		}
 
-		if (isKeyDown(KEY_SPACE)){
+		if (glfwGetKey(window, GLFW_KEY_SPACE) != 0) {
 			if (!Footsteps.jumping && !Footsteps.falling){
 				Footsteps.jumping = true;
 				Footsteps.jumpFrame = 0;
 			}
 		}
 
-		if (isKeyDown(KEY_F)){
+		if (glfwGetKey(window, GLFW_KEY_F) != 0) {
 			if (System.currentTimeMillis() - Footsteps.lastPress > 200){
-				if (Footsteps.wireframe)
-					Footsteps.wireframe = false;
-				else
-					Footsteps.wireframe = true;
+				Footsteps.wireframe = !Footsteps.wireframe;
 				Footsteps.lastPress = System.currentTimeMillis();
 			}
 		}			
@@ -72,7 +70,7 @@ public class KeyHandler {
 		}
 	}*/
 
-		if (isKeyDown(KEY_F3)){
+		if (glfwGetKey(window, GLFW_KEY_F3) != 0) {
 			if (System.currentTimeMillis() - Footsteps.lastPress > 200){
 				if (Footsteps.debug)
 					Footsteps.debug = false;
@@ -83,14 +81,14 @@ public class KeyHandler {
 		}
 
 		// open menu
-		if (isKeyDown(KEY_ESCAPE)){
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) != 0) {
 			if (System.currentTimeMillis() - Footsteps.lastPress > 200){
 				Footsteps.ingameMenu = true;
 				Footsteps.lastPress = System.currentTimeMillis();
 			}
 		}
 
-		if (isButtonDown(1)){
+		/*if (isButtonDown(1)) {
 			if (System.currentTimeMillis() - Footsteps.lastPress > 200){
 				if (isGrabbed())
 					setGrabbed(false);
@@ -98,6 +96,6 @@ public class KeyHandler {
 					setGrabbed(true);
 				Footsteps.lastPress = System.currentTimeMillis();
 			}
-		}
+		}*/
 	}
 }

@@ -2,6 +2,7 @@ package net.amigocraft.footsteps.util;
 
 import static net.amigocraft.footsteps.Footsteps.*;
 import static net.amigocraft.footsteps.util.BufferUtil.asFloatBuffer;
+import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniform1f;
 import static org.lwjgl.opengl.GL20.glUseProgram;
@@ -9,6 +10,7 @@ import static org.lwjgl.opengl.GL20.glUseProgram;
 import java.awt.Color;
 import java.awt.Font;
 import java.io.IOException;
+import java.nio.IntBuffer;
 
 import net.amigocraft.footsteps.Face;
 import net.amigocraft.footsteps.Footsteps;
@@ -16,8 +18,7 @@ import net.amigocraft.footsteps.Location;
 import net.amigocraft.footsteps.Model;
 import net.amigocraft.footsteps.SkyFactory;
 
-import org.lwjgl.opengl.Display;
-import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.BufferUtils;
 import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.opengl.TextureLoader;
@@ -28,8 +29,8 @@ public class RenderUtil {
 	public static UnicodeFont font;
 	public static UnicodeFont backFont;
 	
-	public static void renderWorld(){
-		glLight(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
+	public static void renderWorld(long window){
+		glLightfv(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
 
 		// skybox
 		if (wireframe)
@@ -44,7 +45,7 @@ public class RenderUtil {
 		if (wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-		drawString(0, 0, " ", false);
+		drawString(window, 0, 0, " ", false);
 
 		// terrain
 		Footsteps.grassTexture.bind();
@@ -67,6 +68,7 @@ public class RenderUtil {
 		glRotatef(90f, 0f, 0f, 1f);*/
 		//glScalef(5f, 5f, 5f);
 		glTranslatef(250, 39, 150);
+		Footsteps.bunnyFrame += 1;
 		if (OPENGL_VERSION >= 2.0){
 			glUseProgram(shaderProgram);
 			glUniform1f(diffuseModifierUniform, 10f);
@@ -150,11 +152,17 @@ public class RenderUtil {
 		glDisable(GL_NORMALIZE);
 	}
 
-	public static void drawString(int x, int y, String str, boolean shadow){
+	public static void drawString(long window, int x, int y, String str, boolean shadow){
+		var winWidthBuf = BufferUtils.createIntBuffer(1);
+		var winHeightBuf = BufferUtils.createIntBuffer(1);
+		glfwGetWindowSize(window, winWidthBuf, winHeightBuf);
+		var winWidth = winWidthBuf.get();
+		var winHeight = winHeightBuf.get();
+
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
-		glOrtho(0, Display.getWidth(), Display.getHeight(), 0, -1, 1);
+		glOrtho(0, winWidth, winHeight, 0, -1, 1);
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();

@@ -2,6 +2,7 @@ package net.amigocraft.footsteps.util;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
@@ -20,14 +21,14 @@ public class BufferUtil {
 				buffer.put((byte)(new Color(img.getRGB(x, y), true).getAlpha() & 0xFF));
 			}
 		}
-		buffer.flip();
+		((Buffer) buffer).flip();
 		return buffer; 
 	}
 	
 	public static ByteBuffer asByteBuffer(byte[] b){
 		ByteBuffer buffer = BufferUtils.createByteBuffer(b.length);
 		buffer.put(b);
-		buffer.flip();
+		((Buffer) buffer).flip();
 		buffer.order();
 		return buffer;
 	}
@@ -35,7 +36,7 @@ public class BufferUtil {
 	public static FloatBuffer asFloatBuffer(float[] f){
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(f.length);
 		buffer.put(f);
-		buffer.flip();
+		((Buffer) buffer).flip();
 		buffer.order();
 		return buffer;
 	}
@@ -43,7 +44,7 @@ public class BufferUtil {
 	public static DoubleBuffer asDoubleBuffer(double[] d){
 		DoubleBuffer buffer = BufferUtils.createDoubleBuffer(d.length);
 		buffer.put(d);
-		buffer.flip();
+		((Buffer) buffer).flip();
 		buffer.order();
 		return buffer;
 	}
@@ -51,7 +52,7 @@ public class BufferUtil {
 	public static IntBuffer asIntBuffer(int[] i){
 		IntBuffer buffer = BufferUtils.createIntBuffer(i.length);
 		buffer.put(i);
-		buffer.flip();
+		((Buffer) buffer).flip();
 		buffer.order();
 		return buffer;
 	}

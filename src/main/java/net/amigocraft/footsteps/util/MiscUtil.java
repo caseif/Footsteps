@@ -2,12 +2,12 @@ package net.amigocraft.footsteps.util;
 
 import net.amigocraft.footsteps.Footsteps;
 
-import org.lwjgl.Sys;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class MiscUtil {
 
 	public static long getTime() {
-		return (Sys.getTime() * 1000) / Sys.getTimerResolution();
+		return (long) (glfwGetTime() * 1000);
 	}
 
 	public static void updateFps(){
