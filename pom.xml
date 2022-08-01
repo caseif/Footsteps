@@ -54,6 +54,12 @@
 			<version>${lwjgl.version}</version>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-stb</artifactId>
+            <version>${lwjgl.version}</version>
+            <scope>compile</scope>
+        </dependency>
 		<!-- linux natives -->
 		<dependency>
 			<groupId>org.lwjgl</groupId>
@@ -83,6 +89,13 @@
 			<version>${lwjgl.version}</version>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-stb</artifactId>
+            <classifier>natives-linux</classifier>
+            <version>${lwjgl.version}</version>
+            <scope>compile</scope>
+        </dependency>
 		<!-- win32 natives -->
 		<dependency>
 			<groupId>org.lwjgl</groupId>
@@ -112,16 +125,17 @@
 			<version>${lwjgl.version}</version>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-stb</artifactId>
+            <classifier>natives-windows</classifier>
+            <version>${lwjgl.version}</version>
+            <scope>compile</scope>
+        </dependency>
 		<!-- other libs -->
 		<dependency>
 			<groupId>net.java.jinput</groupId>
 			<artifactId>jinput</artifactId>
-			<version>2.0.6</version>
-			<scope>compile</scope>
-		</dependency>
-        <dependency>
-			<groupId>org.slick2d</groupId>
-			<artifactId>slick2d-core</artifactId>
 			<version>2.0.6</version>
 			<scope>compile</scope>
 		</dependency>
@@ -173,7 +187,6 @@
 						<manifestEntries>
 							<Class-Path>
 								${project.libPath}/lwjgl.jar ${project.libPath}/lwjgl_util.jar
-								${project.libPath}/jinput.jar ${project.libPath}/slick.jar
 								${project.libPath}/soundsystem/soundsystem.jar
 								${project.libPath}/soundsystem/librarylwjglopenal.jar
 								${project.libPath}/soundsystem/codecjorbis.jar
@@ -215,7 +228,7 @@
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
                             <overWriteIfNewer>true</overWriteIfNewer>
-                            <includeGroupIds>org.lwjgl,org.slick2d,net.java.jinput,net.java.jutils,com.paulscode.sound</includeGroupIds>
+                            <includeGroupIds>org.lwjgl,net.java.jinput,net.java.jutils,com.paulscode.sound</includeGroupIds>
                             <excludeClassifiers>natives-linux,natives-windows,natives-osx</excludeClassifiers>
                         </configuration>
                     </execution>

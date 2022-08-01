@@ -6,10 +6,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniform1f;
 import static org.lwjgl.opengl.GL20.glUseProgram;
-
-import java.awt.Color;
-import java.awt.Font;
-import java.io.IOException;
+import static org.lwjgl.stb.STBEasyFont.stb_easy_font_print;
 
 import net.caseif.footsteps.Face;
 import net.caseif.footsteps.Footsteps;
@@ -18,16 +15,9 @@ import net.caseif.footsteps.Model;
 import net.caseif.footsteps.SkyFactory;
 
 import org.lwjgl.BufferUtils;
-import org.newdawn.slick.UnicodeFont;
-import org.newdawn.slick.font.effects.ColorEffect;
-import org.newdawn.slick.opengl.TextureLoader;
 
 public class RenderUtil {
 
-	// GUI related variables
-	public static UnicodeFont font;
-	public static UnicodeFont backFont;
-	
 	public static void renderWorld(long window){
 		glLightfv(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
 
@@ -47,11 +37,13 @@ public class RenderUtil {
 		drawString(window, 0, 0, " ", false);
 
 		// terrain
-		Footsteps.grassTexture.bind();
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, Footsteps.grassTexture);
 		glEnable(GL_LIGHT1);
 		glCallList(Footsteps.terrainHandle);
 		glDisable(GL_LIGHT1);
 		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_TEXTURE_2D);
 
 		// models
 		/*float xOff = ((float)Math.sin(Math.toRadians(camera.getYaw())) * 1) - 3;
@@ -121,18 +113,14 @@ public class RenderUtil {
 				quads = false;
 			}
 			if (f.texture != null){
-				try {
-					if (currentMaterial != f.material.getName()){
-						glBindTexture(GL_TEXTURE_2D, TextureLoader.getTexture(
-								"PNG", RenderUtil.class.getResourceAsStream(
-										f.material.getTexture())).getTextureID());
+				if (currentMaterial != f.material.getName()){
+					var tex = TextureUtil.loadTexture(f.material.getTexture());
+					if (tex.isPresent()) {
+						glBindTexture(GL_TEXTURE_2D, tex.getAsInt());
 						currentMaterial = f.material.getName();
 					}
+				}
 						
-				}
-				catch (IOException ex){
-					ex.printStackTrace();
-				}
 				for (int i : f.texture){
 					float[] tc = m.textureCoords.get(i - 1);
 					glTexCoord2f(tc[0], tc[1]);
@@ -168,9 +156,33 @@ public class RenderUtil {
 		glDisable(GL_LIGHTING);
 		if (Footsteps.wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		if (shadow)
-			backFont.drawString(x - 3, y - 3, str);
-		font.drawString(x, y, str);
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+
+		if (shadow) {
+			var backVertexBuf = BufferUtils.createByteBuffer(str.length() * 270);
+			var backQuadCount = stb_easy_font_print(0, 0, str, null, backVertexBuf);
+
+			glVertexPointer(2, GL_FLOAT, 16, backVertexBuf);
+			glColor4f(0f, 0f, 0f, 1f);
+			glPushMatrix();
+			glTranslatef(x - 3, y - 3, 0f);
+			glScalef(4f, 4f, 1f);
+			glDrawArrays(GL_QUADS, 0, backQuadCount * 4);
+			glPopMatrix();
+		}
+
+		var vertexBuf = BufferUtils.createByteBuffer(str.length() * 270);
+		var quadCount = stb_easy_font_print(0, 0, str, null, vertexBuf);
+
+		glVertexPointer(2, GL_FLOAT, 16, vertexBuf);
+		glColor4f(1f, 1f, 1f, 1f);
+		glPushMatrix();
+		glTranslatef(x, y, 1f);
+		glScalef(4f, 4f, 1f);
+		glDrawArrays(GL_QUADS, 0, quadCount * 4);
+		glPopMatrix();
+
 		if (Footsteps.wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glEnable(GL_LIGHTING);
@@ -178,29 +190,15 @@ public class RenderUtil {
 		glPopMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+
 	}
 
 	@SuppressWarnings("unchecked")
 	public static void setUpFont(){
-		float size = 28F;
-		Font awtFont = new Font("Verdana", Font.BOLD, (int)size);
-		font = new UnicodeFont(awtFont.deriveFont(0, size));
-		font.addAsciiGlyphs();
-		ColorEffect e = new ColorEffect();
-		e.setColor(Color.WHITE);
-		font.getEffects().add(e);
-		backFont = new UnicodeFont(awtFont.deriveFont(0, size));
-		backFont.addAsciiGlyphs();
-		ColorEffect e2 = new ColorEffect();
-		e.setColor(Color.BLACK);
-		backFont.getEffects().add(e2);
-		try {
-			font.loadGlyphs();
-			backFont.loadGlyphs();
-		}
-		catch (Exception ex){
-			ex.printStackTrace();
-		}
+		float size = 28f;
+		//TODO
 	}
 
 	public void moveCameraSmooth(Location oldLoc, Location newLoc, int stages){

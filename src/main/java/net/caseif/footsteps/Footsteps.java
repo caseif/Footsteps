@@ -19,8 +19,6 @@ import net.caseif.footsteps.util.Vector3f;
 
 import net.caseif.footsteps.util.*;
 import org.lwjgl.BufferUtils;
-import org.newdawn.slick.opengl.Texture;
-import org.newdawn.slick.opengl.TextureLoader;
 
 /**
  * @author The Unknown Team
@@ -101,11 +99,11 @@ public class Footsteps {
 
 	public float[] skyColor = new float[]{0f, 0.7f, 0.9f, 1.1f};
 
-	public static Texture grassTexture;
+	public static int grassTexture;
 
-	public Texture bunnyTexture;
+	public int bunnyTexture;
 
-	public List<Sound> grassSounds = new ArrayList<Sound>();
+	public List<Sound> grassSounds = new ArrayList<>();
 
 	public float lastGrassSound = time;
 
@@ -135,7 +133,12 @@ public class Footsteps {
 
 		// textures
 		try {
-			grassTexture = TextureLoader.getTexture("PNG", this.getClass().getResourceAsStream("/images/grass.png"));
+			var grassTextureOpt = TextureUtil.loadTexture("images/grass.png");
+			if (grassTextureOpt.isPresent()) {
+				grassTexture = grassTextureOpt.getAsInt();
+			} else {
+				System.out.println("Failed to load grass texture");
+			}
 			//bunnyTexture = TextureLoader.getTexture("PNG", this.getClass().getResourceAsStream("/images/rabbitfur.png"));
 		}
 		catch (Exception ex){
@@ -403,9 +406,10 @@ public class Footsteps {
 				glVertex3f((winWidth / 2) - (buttonWidth / 2), resumeBtnPos + buttonHeight, 1f);
 				glEnd();
 				String resumeBtnText = "Resume Game";
-				RenderUtil.drawString(window, (winWidth / 2) - (RenderUtil.font.getWidth(resumeBtnText) / 2),
+				//TODO
+				/*RenderUtil.drawString(window, (winWidth / 2) - (RenderUtil.font.getWidth(resumeBtnText) / 2),
 						resumeBtnPos + ((buttonHeight - RenderUtil.font.getHeight(resumeBtnText)) / 2),
-						resumeBtnText, false);
+						resumeBtnText, false);*/
 
 				glEnable(GL_DEPTH_TEST);
 				if (wireframe)

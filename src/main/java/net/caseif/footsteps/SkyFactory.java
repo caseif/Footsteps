@@ -4,21 +4,21 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 
 import net.caseif.footsteps.util.GluEmulation;
-import org.newdawn.slick.opengl.Texture;
-import org.newdawn.slick.opengl.TextureLoader;
+import net.caseif.footsteps.util.TextureUtil;
 
 public class SkyFactory {
 
 	private static int skyHandle = 0;
 
 	public SkyFactory(){
-		Texture skybox = null;
-		try {
-			skybox = TextureLoader.getTexture("PNG", this.getClass().getClassLoader().getResourceAsStream("images/skybox.png"));
+		var skyboxTexOpt = TextureUtil.loadTexture("images/skybox.png");
+
+		if (skyboxTexOpt.isEmpty()) {
+			System.out.println("Failed to load skybox texture");
+			return;
 		}
-		catch (Exception ex){
-			ex.printStackTrace();
-		}
+
+		var skyboxTex = skyboxTexOpt.getAsInt();
 
 		skyHandle = glGenLists(1);
 		glNewList(skyHandle, GL_COMPILE);
@@ -40,7 +40,7 @@ public class SkyFactory {
 			glColor4f(1, 1, 1, 1);
 
 			// front
-			glBindTexture(GL_TEXTURE_2D, skybox.getTextureID());
+			glBindTexture(GL_TEXTURE_2D, skyboxTex);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0.25f, 0.5f);
 			glVertex3f(0.5f, 0.5f, -0.5f);
