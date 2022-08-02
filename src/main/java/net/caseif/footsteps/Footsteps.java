@@ -438,16 +438,16 @@ public class Footsteps {
 
 				MiscUtil.updateFps();
 				if (debug){
-					RenderUtil.drawString(window, 10, 30, "fps: " + currentFps, true);
-					RenderUtil.drawString(window, 10, 65, "x: " + camera.getX(), true);
-					RenderUtil.drawString(window, 10, 100, "y: " + camera.getY(), true);
-					RenderUtil.drawString(window, 10, 135, "z: " + camera.getZ(), true);
-					RenderUtil.drawString(window, 10, 170, "pitch: " + camera.getPitch(), true);
-					RenderUtil.drawString(window, 10, 205, "yaw: " + camera.getYaw(), true);
-					RenderUtil.drawString(window, 10, 240, "gamepad: " + gamepad, true);
+					RenderUtil.drawString(window, 10, 60, "fps: " + currentFps, true);
+					RenderUtil.drawString(window, 10, 95, "x: " + camera.getX(), true);
+					RenderUtil.drawString(window, 10, 130, "y: " + camera.getY(), true);
+					RenderUtil.drawString(window, 10, 165, "z: " + camera.getZ(), true);
+					RenderUtil.drawString(window, 10, 200, "pitch: " + camera.getPitch(), true);
+					RenderUtil.drawString(window, 10, 235, "yaw: " + camera.getYaw(), true);
+					RenderUtil.drawString(window, 10, 270, "gamepad: " + gamepad, true);
 					int mb = 1024 * 1024;
 					Runtime runtime = Runtime.getRuntime();
-					RenderUtil.drawString(window, 10, 275, runtime.maxMemory() / mb + "mb allocated memory: " +
+					RenderUtil.drawString(window, 10, 305, runtime.maxMemory() / mb + "mb allocated memory: " +
 							(runtime.maxMemory() - runtime.freeMemory()) / mb + "mb used, " +
 							runtime.freeMemory() / mb + "mb free", true);
 				}

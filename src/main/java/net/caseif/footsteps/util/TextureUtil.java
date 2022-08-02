@@ -10,6 +10,10 @@ import static org.lwjgl.stb.STBImage.*;
 public class TextureUtil {
     public static OptionalInt loadTexture(String resName) {
         try (var is = TextureUtil.class.getClassLoader().getResourceAsStream(resName)) {
+            if (is == null) {
+                return OptionalInt.empty();
+            }
+
             var texBytes = is.readAllBytes();
             var texBuf = BufferUtils.createByteBuffer(texBytes.length);
             var texWidthBuf = BufferUtils.createIntBuffer(1);

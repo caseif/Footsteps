@@ -6,7 +6,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniform1f;
 import static org.lwjgl.opengl.GL20.glUseProgram;
-import static org.lwjgl.stb.STBEasyFont.stb_easy_font_print;
+import static org.lwjgl.stb.STBTruetype.*;
 
 import net.caseif.footsteps.Face;
 import net.caseif.footsteps.Footsteps;
@@ -15,8 +15,28 @@ import net.caseif.footsteps.Model;
 import net.caseif.footsteps.SkyFactory;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.stb.STBTTAlignedQuad;
+import org.lwjgl.stb.STBTTBakedChar;
+import org.lwjgl.stb.STBTTFontinfo;
+import org.lwjgl.system.MemoryStack;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 public class RenderUtil {
+	private static final float FONT_HEIGHT = 42f;
+	private static final int FONT_BITMAP_W = 512;
+	private static final int FONT_BITMAP_H = 512;
+
+	private static ByteBuffer ttf;
+	private static STBTTFontinfo fontInfo;
+	private static STBTTBakedChar.Buffer fontBitmap;
+	private static float fontAscent;
+	private static float fontDescent;
+	private static float fontLineGap;
+
+	private static int fontTexture;
 
 	public static void renderWorld(long window){
 		glLightfv(GL_LIGHT1, GL_POSITION, asFloatBuffer(new float[]{lightPosition.x, lightPosition.y, lightPosition.z, 1f}));
@@ -26,9 +46,10 @@ public class RenderUtil {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glPushMatrix();
 		glLoadIdentity();
-		glRotatef(camera.getPitch() - 13, 1, 0, 0);
+		glRotatef(camera.getPitch(), 1, 0, 0);
 		glRotatef(camera.getYaw(), 0, 1, 0);
 		glRotatef(5, 0, 0, 1);
+		glRotatef(-13, 1, 0, 0);
 		glCallList(SkyFactory.getHandle());
 		glPopMatrix();
 		if (wireframe)
@@ -159,46 +180,127 @@ public class RenderUtil {
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 
-		if (shadow) {
-			var backVertexBuf = BufferUtils.createByteBuffer(str.length() * 270);
-			var backQuadCount = stb_easy_font_print(0, 0, str, null, backVertexBuf);
+		glEnable(GL_TEXTURE_2D);
 
-			glVertexPointer(2, GL_FLOAT, 16, backVertexBuf);
-			glColor4f(0f, 0f, 0f, 1f);
+		glBindTexture(GL_TEXTURE_2D, fontTexture);
+
+		if (shadow) {
 			glPushMatrix();
-			glTranslatef(x - 3, y - 3, 0f);
-			glScalef(4f, 4f, 1f);
-			glDrawArrays(GL_QUADS, 0, backQuadCount * 4);
+			glTranslatef(0f, 0f, -1f);
+			renderText(str, x - 3, y - 3, new Vector3f(0f, 0f, 0f));
 			glPopMatrix();
 		}
 
-		var vertexBuf = BufferUtils.createByteBuffer(str.length() * 270);
-		var quadCount = stb_easy_font_print(0, 0, str, null, vertexBuf);
+		renderText(str, x, y, new Vector3f(1f, 1f, 1f));
 
-		glVertexPointer(2, GL_FLOAT, 16, vertexBuf);
-		glColor4f(1f, 1f, 1f, 1f);
-		glPushMatrix();
-		glTranslatef(x, y, 1f);
-		glScalef(4f, 4f, 1f);
-		glDrawArrays(GL_QUADS, 0, quadCount * 4);
-		glPopMatrix();
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-		if (Footsteps.wireframe)
+		glDisable(GL_TEXTURE_2D);
+
+		if (Footsteps.wireframe) {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+
 		glEnable(GL_LIGHTING);
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
+	}
 
-		glEnableClientState(GL_VERTEX_ARRAY);
+	private static void renderText(String text, int x, int y, Vector3f color) {
+		try (var stack = MemoryStack.stackPush()) {
+			var pCodePoint = stack.mallocInt(1);
 
+			var xBuf = stack.floats(0f);
+			var yBuf = stack.floats(0f);
+
+			var quad = STBTTAlignedQuad.mallocStack(stack);
+
+			glColor4f(color.x, color.y, color.z, 1f);
+			glPushMatrix();
+			glTranslatef(x, y, 0f);
+
+			glBegin(GL_QUADS);
+
+			float scale = stbtt_ScaleForPixelHeight(fontInfo, FONT_HEIGHT);
+
+			for (int i = 0, to = text.length(); i < to; ) {
+				i += getCodePoint(text, to, i, pCodePoint);
+
+				int cp = pCodePoint.get(0);
+
+				if (cp < 32 || 128 <= cp) {
+					continue;
+				}
+
+				stbtt_GetBakedQuad(fontBitmap, FONT_BITMAP_W, FONT_BITMAP_H, cp - 32, xBuf, yBuf, quad, true);
+				xBuf.put(0, xBuf.get(0));
+				if (i < to) {
+					getCodePoint(text, to, i, pCodePoint);
+					xBuf.put(0, xBuf.get(0) + stbtt_GetCodepointKernAdvance(fontInfo, cp, pCodePoint.get(0)) * scale);
+				}
+
+				glTexCoord2f(quad.s0(), quad.t0());
+				glVertex2f(quad.x0(), quad.y0());
+				glTexCoord2f(quad.s1(), quad.t0());
+				glVertex2f(quad.x1(), quad.y0());
+				glTexCoord2f(quad.s1(), quad.t1());
+				glVertex2f(quad.x1(), quad.y1());
+				glTexCoord2f(quad.s0(), quad.t1());
+				glVertex2f(quad.x0(), quad.y1());
+			}
+
+			glEnd();
+
+			glPopMatrix();
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public static void setUpFont(){
-		float size = 28f;
-		//TODO
+		try (var ttfIs = RenderUtil.class.getResourceAsStream("/fonts/open-sans-bold.ttf")) {
+			var ttfBytes = ttfIs.readAllBytes();
+			ttf = BufferUtils.createByteBuffer(ttfBytes.length + 1);
+			ttf.put(ttfBytes);
+			ttf.flip();
+		} catch (IOException ex) {
+			throw new RuntimeException("Failed to load font", ex);
+		}
+
+		fontInfo = STBTTFontinfo.create();
+		if (!stbtt_InitFont(fontInfo, ttf)) {
+			throw new RuntimeException("Failed to initialize font");
+		}
+
+		try (MemoryStack stack = MemoryStack.stackPush()) {
+			var pAscent  = stack.mallocInt(1);
+			var pDescent = stack.mallocInt(1);
+			var pLineGap = stack.mallocInt(1);
+
+			stbtt_GetFontVMetrics(fontInfo, pAscent, pDescent, pLineGap);
+
+			fontAscent = pAscent.get();
+			fontDescent = pDescent.get();
+			fontLineGap = pLineGap.get();
+		}
+
+		STBTTBakedChar.Buffer cdata = STBTTBakedChar.malloc(96);
+		ByteBuffer bitmap = BufferUtils.createByteBuffer(FONT_BITMAP_W * FONT_BITMAP_H);
+
+		stbtt_BakeFontBitmap(ttf, FONT_HEIGHT, bitmap, FONT_BITMAP_W, FONT_BITMAP_H, 32, cdata);
+
+		fontTexture = glGenTextures();
+
+		glBindTexture(GL_TEXTURE_2D, fontTexture);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, FONT_BITMAP_W, FONT_BITMAP_H, 0, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		fontBitmap = cdata;
 	}
 
 	public void moveCameraSmooth(Location oldLoc, Location newLoc, int stages){
@@ -215,5 +317,18 @@ public class RenderUtil {
 			Footsteps.camera.position.y += yPerStage;
 			Footsteps.camera.position.z += zPerStage;
 		}
+	}
+
+	private static int getCodePoint(String text, int to, int i, IntBuffer codePointOut) {
+		char c1 = text.charAt(i);
+		if (Character.isHighSurrogate(c1) && i + 1 < to) {
+			char c2 = text.charAt(i + 1);
+			if (Character.isLowSurrogate(c2)) {
+				codePointOut.put(0, Character.toCodePoint(c1, c2));
+				return 2;
+			}
+		}
+		codePointOut.put(0, c1);
+		return 1;
 	}
 }
