@@ -1,31 +1,28 @@
 package net.caseif.footsteps;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.openal.ALC10.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import net.caseif.footsteps.util.ObjLoader;
-import net.caseif.footsteps.util.SetupDisplay;
-import net.caseif.footsteps.util.ShaderLoader;
-import net.caseif.footsteps.util.Vector3f;
-
 import net.caseif.footsteps.util.*;
-import org.lwjgl.BufferUtils;
 
-/**
- * @author The Unknown Team
- * 
- * All Rights Reserved to The Unknown Team
- *
- */
+import org.lwjgl.BufferUtils;
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.ALC;
+import org.lwjgl.openal.ALCCapabilities;
+
 public class Footsteps {
 
 	public static double OPENGL_VERSION;
@@ -146,15 +143,22 @@ public class Footsteps {
 		}
 
 		// sounds
-		//try {AL.create();}
-		//catch (LWJGLException ex){ex.printStackTrace();}
-		/*Sound.initialize();
+		var soundDev = alcOpenDevice((ByteBuffer) null);
+		if (soundDev != 0) {
+			ALCCapabilities deviceCaps = ALC.createCapabilities(soundDev);
+			var context = alcCreateContext(soundDev, (IntBuffer) null);
+			alcMakeContextCurrent(context);
+			AL.createCapabilities(deviceCaps);
+		} else {
+			System.err.println("Failed to open sound device");
+		}
+
 		grassSounds.add(new Sound("grass1", "/sounds/grass1.ogg"));
 		grassSounds.add(new Sound("grass2", "/sounds/grass2.ogg"));
 		grassSounds.add(new Sound("grass3", "/sounds/grass3.ogg"));
 		grassSounds.add(new Sound("grass4", "/sounds/grass4.ogg"));
 		grassSounds.add(new Sound("grass5", "/sounds/grass5.ogg"));
-		grassSounds.add(new Sound("grass6", "/sounds/grass6.ogg"));*/
+		grassSounds.add(new Sound("grass6", "/sounds/grass6.ogg"));
 
 		RenderUtil.setUpFont();
 
@@ -565,10 +569,10 @@ public class Footsteps {
 
 					if (moved){
 						if (time - lastGrassSound > playerFootstepDelay){
-							/*Random rand = new Random();
+							Random rand = new Random();
 							int soundToPlay = rand.nextInt(grassSounds.size() - 1);
 							grassSounds.get(soundToPlay).play();
-							lastGrassSound = time;*/
+							lastGrassSound = time;
 						}
 					}
 				}
@@ -581,9 +585,9 @@ public class Footsteps {
 
 			glfwSwapBuffers(window);
 		}
-		/*for (Sound s : grassSounds){
+		for (Sound s : grassSounds){
 			s.dispose();
-		}*/
+		}
 		//AL.destroy();
 		if (OPENGL_VERSION >= 2.0){
 			glDeleteProgram(shaderProgram);

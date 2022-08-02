@@ -308,8 +308,6 @@ public class Camera {
 			moved = false;
 
 			position = add(position, velocity, true);
-			//Sound.soundSystem.setListenerPosition(position.getX(), position.getY(), position.getZ());
-			//Sound.soundSystem.setListenerVelocity(velocity.getX(), velocity.getY(), velocity.getZ());
 			glRotatef(pitch, 1.0f, 0.0f, 0.0f);
 			glRotatef(yaw, 0.0f, 1.0f, 0.0f);
 			glTranslatef(position.x, position.y, position.z);

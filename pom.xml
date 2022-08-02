@@ -139,24 +139,6 @@
 			<version>2.0.6</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.paulscode.sound</groupId>
-			<artifactId>codecjorbis</artifactId>
-			<version>0.0.1</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.paulscode.sound</groupId>
-			<artifactId>librarylwjglopenal</artifactId>
-			<version>0.0.1</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.paulscode.sound</groupId>
-			<artifactId>soundsystem</artifactId>
-			<version>0.0.1</version>
-			<scope>compile</scope>
-		</dependency>
 	</dependencies>
 
 	<build>

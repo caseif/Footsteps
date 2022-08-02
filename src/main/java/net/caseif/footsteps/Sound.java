@@ -1,14 +1,17 @@
 package net.caseif.footsteps;
 
-import paulscode.sound.SoundSystem;
-import paulscode.sound.SoundSystemConfig;
-import paulscode.sound.SoundSystemException;
-import paulscode.sound.codecs.CodecJOrbis;
-import paulscode.sound.libraries.LibraryLWJGLOpenAL;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.stb.STBVorbisAlloc;
+import org.lwjgl.stb.STBVorbisInfo;
+import org.lwjgl.system.MemoryUtil;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+
+import static org.lwjgl.openal.AL10.*;
+import static org.lwjgl.stb.STBVorbis.*;
 
 public class Sound {
-
-	public static SoundSystem soundSystem;
 
 	private String id;
 	private String path;
@@ -17,57 +20,81 @@ public class Sound {
 	private int source;
 	private int buffer;
 
-	public static void initialize(){
-		try {
-			SoundSystemConfig.addLibrary(LibraryLWJGLOpenAL.class);
-			SoundSystemConfig.setCodec("ogg", CodecJOrbis.class);
-		}
-		catch (SoundSystemException ex){
-			System.err.println("An exception occurred while linking the Codec-JOrbis plugin");
-		}
-		soundSystem = new SoundSystem();
-	}
-
 	public Sound(String identifier, String path, Location loc, Location velocity){
 		this.id = identifier;
 		this.path = path;
 		this.loc = loc;
 		this.velocity = velocity;
-		soundSystem.loadSound(Sound.class.getResource(path), id);
-		soundSystem.setPosition(id, loc.getX(), loc.getY(), loc.getZ());
-		soundSystem.setVelocity(id, velocity.getX(), velocity.getY(), velocity.getZ());
 	}
 	
 	public Sound(String identifier, String path, Location loc){
 		this(identifier, path, loc, new Location(0, 0, 0));
+		initialize();
 	}
 	
 	public Sound(String identifier, String path){
 		this(identifier, path, new Location(0, 0, 0));
+		initialize();
 	}
 
-	/*public void initialize(){
-		BufferedInputStream bIs = new BufferedInputStream(Sound.class.getResourceAsStream(path));
-		WaveData data = WaveData.create(bIs);
-		buffer = alGenBuffers();
-		if (data == null)
-			System.out.println("data");
-		alBufferData(buffer, data.format, data.data, data.samplerate);
-		data.dispose();
-		source = alGenSources();
-		alSourcei(source, AL_BUFFER, buffer);
-	}*/
+	public void initialize(){
+		try {
+			BufferedInputStream bIs = new BufferedInputStream(Sound.class.getResourceAsStream(path));
+			var soundBytes = bIs.readAllBytes();
+			var soundBuf = BufferUtils.createByteBuffer(soundBytes.length);
+			soundBuf.put(soundBytes);
+			soundBuf.flip();
+			var errBuf = BufferUtils.createIntBuffer(1);
+			var allocBuf = BufferUtils.createByteBuffer(soundBytes.length);
+
+			var soundHandle = stb_vorbis_open_memory(soundBuf, errBuf, null);
+			if (soundHandle == 0) {
+				System.err.println("Failed to open sound (rc " + errBuf.get() + ")");
+				return;
+			}
+
+			try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
+				stb_vorbis_get_info(soundHandle, info);
+
+				var err = errBuf.get();
+				if (err != 0) {
+					System.err.println("STB Vorbis error: " + err);
+					return;
+				}
+
+				buffer = alGenBuffers();
+				int format;
+				if (info.channels() == 1) {
+					format = AL_FORMAT_MONO16;
+				} else {
+					format = AL_FORMAT_STEREO16;
+				}
+
+				var numSamples = stb_vorbis_stream_length_in_samples(soundHandle);
+
+				var pcm = MemoryUtil.memAllocShort(numSamples);
+
+				pcm.limit(stb_vorbis_get_samples_short_interleaved(soundHandle, info.channels(), pcm) * info.channels());
+
+				alBufferData(buffer, format, pcm, info.sample_rate());
+				source = alGenSources();
+				alSourcei(source, AL_BUFFER, buffer);
+			}
+
+			stb_vorbis_close(soundHandle);
+		} catch (IOException ex) {
+			throw new RuntimeException("Failed to load sound", ex);
+		}
+	}
 
 	public void play(){
-		//alSource3f(source, AL_POSITION, loc.getX(), loc.getY(), loc.getZ());
-		//alSource3f(source, AL_VELOCITY, velocity.getX(), velocity.getY(), velocity.getZ());
-		//alSourcePlay(source);
-		soundSystem.play(id);
+		alSource3f(source, AL_POSITION, loc.getX(), loc.getY(), loc.getZ());
+		alSource3f(source, AL_VELOCITY, velocity.getX(), velocity.getY(), velocity.getZ());
+		alSourcePlay(source);
 	}
 
 	public void dispose(){
-		//alDeleteBuffers(buffer);
-		soundSystem.unloadSound(id);
+		alDeleteBuffers(buffer);
 	}
 
 	public String getPath(){
