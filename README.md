@@ -25,9 +25,9 @@ cool to me at the time.
 
 Apparently around a year and a half after my initial work on this demo had stopped, I did some work to convert it to a
 Maven project and to get it running on my new computer. Much more recently, I've ported it to LWJGL 3 (to allow the demo
-to be run on newer Java versions) and removed the dependency on Slick (which has a hard dependency on Java Web Start).
-Apart from these changes and some fixes for things that were outright broken and had been working before, this project
-is basically unmodified from how I left it at age 15.
+to be run on newer Java versions) and removed the dependencies on Slick (which has a hard dependency on Java Web Start)
+and SoundSystem. Apart from these changes and some fixes for things that were outright broken and had been working
+before, this project is essentially unmodified from how I left it at age 15.
 
 ## Assets
 
